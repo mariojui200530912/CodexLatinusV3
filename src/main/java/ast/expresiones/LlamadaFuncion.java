@@ -3,11 +3,11 @@ package ast.expresiones;
 import ast.Expresion;
 import ast.ResultadoC3D;
 import cuartetas.AccesoTemporal;
+import cuartetas.Asignacion3D;
 import cuartetas.GetStack3D;
 import cuartetas.Literal3D;
 import cuartetas.OperacionBinaria3D;
 import cuartetas.SetStack3D;
-import cuartetas.Asignacion3D;
 import errores.GestorErrores;
 import errores.TipoError;
 import generador.GeneradorC3D;
@@ -33,50 +33,99 @@ public class LlamadaFuncion extends Expresion {
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        // Buscar la funcion/metodo en la Tabla de Símbolos
+        // Buscar la funcion en el entorno (generalmente global)
         Simbolo simFuncion = entorno.buscar(idFuncion);
-        if (simFuncion == null || (!simFuncion.categoria.equals("Funcion") && !simFuncion.categoria.equals("Metodo"))) {
+
+        if (simFuncion == null || !"Funcion".equals(simFuncion.categoria)) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "La función o método '" + idFuncion + "' no está definido.", linea, columna
+                    TipoError.SEMANTICO, "La función '" + idFuncion + "' no existe o no ha sido declarada.", linea, columna
             );
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Validar coincidencia en la cantidad de parametros
-        if (simFuncion.parametros.size() != argumentos.size()) {
+        // Validar cantidad de argumentos vs parametros esperados
+        if (argumentos.size() != simFuncion.parametros.size()) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "La función '" + idFuncion + "' espera " + simFuncion.parametros.size() + " argumentos, pero recibió " + argumentos.size() + ".", linea, columna
+                    TipoError.SEMANTICO,
+                    "La función '" + idFuncion + "' espera " + simFuncion.parametros.size() + " argumentos, pero se enviaron " + argumentos.size() + ".",
+                    linea, columna
             );
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Evaluar los argumentos actuales
+        // Evaluar los argumentos ingresados
         List<ResultadoC3D> resultadosArgs = new ArrayList<>();
         for (Expresion arg : argumentos) {
             resultadosArgs.add((ResultadoC3D) arg.generar(entorno));
         }
 
-        // Calcular el inicio del nuevo entorno (Stack): t_nuevoP = P + entorno.offset
+        // Preparar el nuevo entorno en el Stack: t_nuevoP = P + entorno.offset actual
         AccesoTemporal t_nuevoP = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
                 t_nuevoP, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
         ));
 
-        // Inyectar los argumentos en las posiciones relativas del nuevo entorno
+        // Inyectar los parámetros en el nuevo Stack (Iniciando desde la posición 1, ya que la 0 es el return)
         for (int i = 0; i < resultadosArgs.size(); i++) {
+            ResultadoC3D resArg = resultadosArgs.get(i);
             Simbolo paramFormal = simFuncion.parametros.get(i);
+
+            TipoDato tipoEsperado = ValidadorTipos.parsearTipo(paramFormal.tipo);
+            String tipoObjetoEsperado = paramFormal.tipo;
+
+            boolean esAsignacionValida = ValidadorTipos.validarAsignacion(tipoEsperado, resArg.tipo);
+
+            if (!esAsignacionValida) {
+                GestorErrores.getInstancia().agregarError(
+                        TipoError.SEMANTICO,
+                        "Incompatibilidad de tipos en argumento " + (i + 1) + " de '" + idFuncion + "': Se esperaba '" + tipoObjetoEsperado + "' pero se envió '" + resArg.tipo + "'.",
+                        linea, columna
+                );
+                return new ResultadoC3D(null, TipoDato.ERROR);
+            }
+
+            // Validación de Herencia (Polimorfismo / Upcasting) para Objetos enviados como parámetros
+            if (tipoEsperado == TipoDato.OBJETO && resArg.tipo == TipoDato.OBJETO) {
+                if (resArg.tipoStringOriginal != null) {
+                    boolean esCompatible = false;
+                    String claseActual = resArg.tipoStringOriginal;
+
+                    while (claseActual != null && !claseActual.isEmpty()) {
+                        if (claseActual.equals(tipoObjetoEsperado)) {
+                            esCompatible = true;
+                            break;
+                        }
+                        Simbolo simClaseActual = entorno.buscar(claseActual);
+                        if (simClaseActual != null && "Clase".equals(simClaseActual.categoria)) {
+                            claseActual = simClaseActual.clasePadre; // Subir en la jerarquía
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (!esCompatible) {
+                        GestorErrores.getInstancia().agregarError(
+                                TipoError.SEMANTICO,
+                                "Incompatibilidad de clases en argumento " + (i + 1) + ": No se puede enviar un objeto de clase '" + resArg.tipoStringOriginal + "' como parámetro de tipo '" + tipoObjetoEsperado + "'.",
+                                linea, columna
+                        );
+                        return new ResultadoC3D(null, TipoDato.ERROR);
+                    }
+                }
+            }
+
             AccesoTemporal t_posArg = new AccesoTemporal(gen.generarTemporal());
 
             gen.agregarCuarteta(new OperacionBinaria3D(
                     t_posArg, t_nuevoP, "+", new Literal3D(String.valueOf(paramFormal.direccionMemoria))
             ));
-            gen.agregarCuarteta(new SetStack3D(t_posArg, resultadosArgs.get(i).valorC3D));
+            gen.agregarCuarteta(new SetStack3D(t_posArg, resArg.valorC3D));
         }
 
-        // Mover el puntero global P, ejecutar la llamada y restaurar P
+        // Cambiar de entorno, Llamar a la función y Restaurar entorno
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_nuevoP));
 
-        // Simulacion de la instruccion de llamada 'call funcion()' en C3D
+        // Simulación de llamada en C3D (TraductorRiscV convertirá esto en un 'jal' o 'call')
         gen.agregarCuarteta(new Asignacion3D(new AccesoTemporal("llamar"), new Literal3D(idFuncion + "()")));
 
         AccesoTemporal t_regresarP = new AccesoTemporal(gen.generarTemporal());
@@ -85,12 +134,13 @@ public class LlamadaFuncion extends Expresion {
         ));
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_regresarP));
 
-        // Extraer el valor de retorno (si no es VOID)
+        // Capturar valor de retorno si no es VOID (Leyendo la posición 0 del Stack recién abandonado)
         TipoDato tipoRetorno = ValidadorTipos.parsearTipo(simFuncion.tipo);
+
         if (tipoRetorno != TipoDato.VOID) {
             AccesoTemporal t_posRetorno = new AccesoTemporal(gen.generarTemporal());
 
-            // Por convencion, el valor de retorno se aloja en la posición 0 del entorno de la función llamada
+            // La posición 0 del entorno que acabamos de ejecutar
             gen.agregarCuarteta(new OperacionBinaria3D(
                     t_posRetorno, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
             ));

@@ -12,73 +12,97 @@ import generador.GeneradorC3D;
 import semantico.Simbolo;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
+import semantico.ValidadorTipos;
 
 public class AccesoPropiedad extends Expresion {
     public Expresion objetoBase;
-    public String propiedad;
-    public boolean esDestino = false;
+    public String idPropiedad;
+    public boolean esDestino = false; // true si está al lado izquierdo de un '='
 
-    public AccesoPropiedad(Expresion objetoBase, String propiedad, int linea, int columna) {
+    public AccesoPropiedad(Expresion objetoBase, String idPropiedad, int linea, int columna) {
         super(linea, columna);
         this.objetoBase = objetoBase;
-        this.propiedad = propiedad;
+        this.idPropiedad = idPropiedad;
     }
 
     @Override
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        // Obtener la referencia (puntero) base del objeto en el Heap
+        // Evaluar el objeto base (debe devolver un puntero al Heap)
         ResultadoC3D resBase = (ResultadoC3D) objetoBase.generar(entorno);
 
-        if (resBase == null || resBase.tipo != TipoDato.OBJETO || resBase.tipoStringOriginal == null) {
+        if (resBase == null || resBase.tipo == TipoDato.ERROR) {
+            return new ResultadoC3D(null, TipoDato.ERROR);
+        }
+
+        // Validación semántica: Asegurar que el objeto base sea realmente un OBJETO
+        if (resBase.tipo != TipoDato.OBJETO || resBase.tipoStringOriginal == null) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "No se puede acceder a la propiedad '" + propiedad + "' de una referencia nula o tipo inválido.", linea, columna
+                    TipoError.SEMANTICO,
+                    "No se puede acceder a la propiedad '" + idPropiedad + "'. La expresión base no es un objeto válido.",
+                    linea, columna
             );
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Buscar la clase base en el entorno global para calcular el desplazamiento (offset) del atributo
-        Simbolo simClase = entorno.buscar(resBase.tipoStringOriginal);
-        Simbolo simPropiedad = null;
+        String nombreClase = resBase.tipoStringOriginal;
 
-        if (simClase != null && simClase.parametros != null) {
-            for (Simbolo param : simClase.parametros) {
-                if (param.id.equals(propiedad)) {
-                    simPropiedad = param;
-                    break;
-                }
+        // Buscar la clase en el entorno global para extraer sus atributos
+        Simbolo simClase = entorno.buscar(nombreClase);
+        if (simClase == null || !"Clase".equals(simClase.categoria)) {
+            GestorErrores.getInstancia().agregarError(
+                    TipoError.SEMANTICO, "La clase '" + nombreClase + "' no está definida.", linea, columna
+            );
+            return new ResultadoC3D(null, TipoDato.ERROR);
+        }
+
+        // Buscar el atributo dentro de los parámetros (estructura simulada) de la clase
+        Simbolo simAtributo = null;
+        for (Simbolo attr : simClase.parametros) {
+            if (attr.id.equals(idPropiedad) && "Atributo".equals(attr.categoria)) {
+                simAtributo = attr;
+                break;
             }
         }
 
-        if (simPropiedad == null) {
+        if (simAtributo == null) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "La propiedad '" + propiedad + "' no existe en la clase '" + resBase.tipoStringOriginal + "'.", linea, columna
+                    TipoError.SEMANTICO,
+                    "La propiedad '" + idPropiedad + "' no pertenece a la clase '" + nombreClase + "'.",
+                    linea, columna
             );
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Calcular la dirección física: Puntero Base (Heap) + Offset del atributo
-        AccesoTemporal t_posicion = new AccesoTemporal(gen.generarTemporal());
+        // Obtener el tipo de dato real del atributo (parseado y string original si es objeto)
+        TipoDato tipoAtributo = ValidadorTipos.parsearTipo(simAtributo.tipo);
+
+        // Calcular la dirección física en el Heap: t_direccion = puntero_base + offset_atributo
+        AccesoTemporal t_direccion = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
-                t_posicion, resBase.valorC3D, "+", new Literal3D(String.valueOf(simPropiedad.direccionMemoria))
+                t_direccion,
+                resBase.valorC3D,
+                "+",
+                new Literal3D(String.valueOf(simAtributo.direccionMemoria)) // offset relativo
         ));
 
-        this.tipo = semantico.ValidadorTipos.parsearTipo(simPropiedad.tipo);
-
-        // Si es asignación (L-Value), retornamos la dirección calculada en el Heap
+        // Retornar dirección o extraer el valor
+        ResultadoC3D resFinal;
         if (esDestino) {
-            ResultadoC3D resDestino = new ResultadoC3D(t_posicion, this.tipo);
-            if (this.tipo == TipoDato.OBJETO) resDestino.tipoStringOriginal = simPropiedad.tipo;
-            return resDestino;
+            // Si es asignación (L-Value), devolvemos solo la dirección calculada en el Heap
+            resFinal = new ResultadoC3D(t_direccion, tipoAtributo);
+        } else {
+            // Si es lectura (R-Value), emitimos la instrucción para traer el dato del Heap
+            AccesoTemporal t_valor = new AccesoTemporal(gen.generarTemporal());
+            gen.agregarCuarteta(new GetHeap3D(t_valor, t_direccion));
+            resFinal = new ResultadoC3D(t_valor, tipoAtributo);
         }
 
-        // Si es lectura (R-Value), extraemos el valor almacenado en el Heap
-        AccesoTemporal t_valor = new AccesoTemporal(gen.generarTemporal());
-        gen.agregarCuarteta(new GetHeap3D(t_valor, t_posicion));
-
-        ResultadoC3D resFinal = new ResultadoC3D(t_valor, this.tipo);
-        if (this.tipo == TipoDato.OBJETO) resFinal.tipoStringOriginal = simPropiedad.tipo;
+        // Si la propiedad a la que accedemos es a su vez otro Objeto, preservamos su clase
+        if (tipoAtributo == TipoDato.OBJETO) {
+            resFinal.tipoStringOriginal = simAtributo.tipo;
+        }
 
         return resFinal;
     }

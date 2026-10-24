@@ -16,92 +16,76 @@ import semantico.TipoDato;
 import java.util.List;
 
 public class NodoIf extends Instruccion {
-    public Expresion condicionPrincipal;
+    public Expresion condicion;
     public List<Instruccion> bloqueVerdadero;
-    public List<NodoSino> listaSinos;
-    public List<Instruccion> bloqueContrario;
+    public List<Instruccion> bloqueFalso; // Puede contener instrucciones de un 'else' o un único NodoIf para un 'else if'
 
-    public NodoIf(Expresion condicionPrincipal, List<Instruccion> bloqueVerdadero, List<NodoSino> listaSinos, List<Instruccion> bloqueContrario, int linea, int columna) {
+    public NodoIf(Expresion condicion, List<Instruccion> bloqueVerdadero, List<Instruccion> bloqueFalso, int linea, int columna) {
         super(linea, columna);
-        this.condicionPrincipal = condicionPrincipal;
+        this.condicion = condicion;
         this.bloqueVerdadero = bloqueVerdadero;
-        this.listaSinos = listaSinos;
-        this.bloqueContrario = bloqueContrario;
+        this.bloqueFalso = bloqueFalso;
     }
 
     @Override
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
-        String L_Salida = gen.generarEtiqueta();
 
-        // Evaluar IF principal
-        ResultadoC3D resCond = (ResultadoC3D) condicionPrincipal.generar(entorno);
-        validarBooleano(resCond, linea, columna);
+        // Evaluar la condición
+        ResultadoC3D resCondicion = (ResultadoC3D) condicion.generar(entorno);
 
+        if (resCondicion == null || resCondicion.tipo == TipoDato.ERROR) {
+            return null; // El error ya fue reportado por los nodos hijos
+        }
+
+        // Validación Semántica: La condición debe ser estrictamente BOOLEANA
+        if (resCondicion.tipo != TipoDato.BOOLEANO) {
+            GestorErrores.getInstancia().agregarError(
+                    TipoError.SEMANTICO,
+                    "La condición de la sentencia 'if' debe ser de tipo BOOLEANO. Se encontró: " + resCondicion.tipo,
+                    linea, columna
+            );
+            return null;
+        }
+
+        // Generar etiquetas de control de flujo
         String L_Verdadero = gen.generarEtiqueta();
         String L_Falso = gen.generarEtiqueta();
+        String L_Salida = gen.generarEtiqueta();
 
-        gen.agregarCuarteta(new Condicional3D(resCond.valorC3D, new Literal3D("1"), "==", L_Verdadero));
+        // Salto condicional: if (condicion == 1) goto L_Verdadero
+        gen.agregarCuarteta(new Condicional3D(resCondicion.valorC3D, new Literal3D("1"), "==", L_Verdadero));
+
+        // Si la condición no se cumplió, el flujo "cae" al goto L_Falso
         gen.agregarCuarteta(new Goto3D(L_Falso));
 
+        // --- BLOQUE VERDADERO ---
         gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Verdadero));
-        TablaSimbolos entornoIf = new TablaSimbolos(entorno, "Bloque_If");
-        ejecutarBloque(bloqueVerdadero, entornoIf);
+
+        // Crear un nuevo ámbito (Scope) para que las variables locales del 'if' no afecten al exterior
+        TablaSimbolos entornoVerdadero = new TablaSimbolos(entorno, "If_Verdadero");
+        if (bloqueVerdadero != null) {
+            for (Instruccion inst : bloqueVerdadero) {
+                if (inst != null) inst.generar(entornoVerdadero);
+            }
+        }
+
+        // Al terminar el bloque verdadero, saltar hacia el final para evitar ejecutar el else
         gen.agregarCuarteta(new Goto3D(L_Salida));
 
+        // --- BLOQUE FALSO (ELSE / ELSE IF) ---
         gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Falso));
 
-        // Evaluar SINOS (else if)
-        if (listaSinos != null) {
-            for (NodoSino sino : listaSinos) {
-                ResultadoC3D resCondSino = (ResultadoC3D) sino.condicion.generar(entorno);
-                validarBooleano(resCondSino, sino.linea, sino.columna);
-
-                String L_VerdaderoSino = gen.generarEtiqueta();
-                String L_FalsoSino = gen.generarEtiqueta();
-
-                gen.agregarCuarteta(new Condicional3D(resCondSino.valorC3D, new Literal3D("1"), "==", L_VerdaderoSino));
-                gen.agregarCuarteta(new Goto3D(L_FalsoSino));
-
-                gen.agregarCuarteta(new DefinicionEtiqueta3D(L_VerdaderoSino));
-                TablaSimbolos entornoSino = new TablaSimbolos(entorno, "Bloque_Sino");
-                ejecutarBloque(sino.bloque, entornoSino);
-                gen.agregarCuarteta(new Goto3D(L_Salida));
-
-                gen.agregarCuarteta(new DefinicionEtiqueta3D(L_FalsoSino));
+        if (bloqueFalso != null && !bloqueFalso.isEmpty()) {
+            TablaSimbolos entornoFalso = new TablaSimbolos(entorno, "If_Falso");
+            for (Instruccion inst : bloqueFalso) {
+                if (inst != null) inst.generar(entornoFalso);
             }
         }
 
-        // Evaluar CONTRARIO (else)
-        if (bloqueContrario != null && !bloqueContrario.isEmpty()) {
-            TablaSimbolos entornoElse = new TablaSimbolos(entorno, "Bloque_Else");
-            ejecutarBloque(bloqueContrario, entornoElse);
-        }
-
+        // --- ETIQUETA DE SALIDA ---
         gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Salida));
+
         return null;
-    }
-
-    private void validarBooleano(ResultadoC3D res, int l, int c) {
-        if (res != null && res.tipo != TipoDato.BOOLEANO && res.tipo != TipoDato.ERROR) {
-            GestorErrores.getInstancia().agregarError(TipoError.SEMANTICO, "La condición debe ser booleana.", l, c);
-        }
-    }
-
-    private void ejecutarBloque(List<Instruccion> bloque, TablaSimbolos ent) {
-        if (bloque != null) {
-            for (Instruccion inst : bloque) {
-                if (inst != null) inst.generar(ent);
-            }
-        }
-    }
-
-    public static class NodoSino {
-        public Expresion condicion;
-        public List<Instruccion> bloque;
-        public int linea, columna;
-        public NodoSino(Expresion condicion, List<Instruccion> bloque, int linea, int columna) {
-            this.condicion = condicion; this.bloque = bloque; this.linea = linea; this.columna = columna;
-        }
     }
 }

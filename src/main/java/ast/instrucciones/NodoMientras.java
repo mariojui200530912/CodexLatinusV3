@@ -29,27 +29,47 @@ public class NodoMientras extends Instruccion {
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        String L_Condicion = gen.generarEtiqueta();
+        // Crear etiquetas de control
+        String L_Inicio = gen.generarEtiqueta();
         String L_Verdadero = gen.generarEtiqueta();
         String L_Falso = gen.generarEtiqueta();
 
-        gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Condicion));
+        // Definir la etiqueta de retorno para la reevaluación del ciclo
+        gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Inicio));
 
+        // Evaluar la expresión condicional
         ResultadoC3D resCondicion = (ResultadoC3D) condicion.generar(entorno);
-        if (resCondicion != null && resCondicion.tipo != TipoDato.BOOLEANO && resCondicion.tipo != TipoDato.ERROR) {
-            GestorErrores.getInstancia().agregarError(TipoError.SEMANTICO, "La condición del ciclo debe ser booleana", linea, columna);
+
+        if (resCondicion == null || resCondicion.tipo == TipoDato.ERROR) {
+            return null; // El error ya fue reportado en los nodos hijos
         }
 
+        // Validación Semántica: Garantizar que la condición sea BOOLEANA
+        if (resCondicion.tipo != TipoDato.BOOLEANO) {
+            GestorErrores.getInstancia().agregarError(
+                    TipoError.SEMANTICO,
+                    "La condición del ciclo 'mientras' debe ser de tipo BOOLEANO. Se encontró: " + resCondicion.tipo,
+                    linea, columna
+            );
+            return null;
+        }
+
+        // Salto Condicional (Evaluación de entrada al ciclo)
         gen.agregarCuarteta(new Condicional3D(resCondicion.valorC3D, new Literal3D("1"), "==", L_Verdadero));
         gen.agregarCuarteta(new Goto3D(L_Falso));
 
+        // --- BLOQUE VERDADERO (Cuerpo del Ciclo) ---
         gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Verdadero));
 
-        TablaSimbolos entornoMientras = new TablaSimbolos(entorno, "Ciclo_Mientras");
-        entornoMientras.esCiclo = true;
-
+        // Inyectar etiquetas en las pilas para soportar 'break' y 'continue'
+        // - break: salta a L_Falso
+        // - continue: salta a L_Inicio
         gen.etiquetasBreak.push(L_Falso);
-        gen.etiquetasContinue.push(L_Condicion);
+        gen.etiquetasContinue.push(L_Inicio);
+
+        // Crear un sub-ámbito para encapsular las variables declaradas dentro del ciclo
+        TablaSimbolos entornoMientras = new TablaSimbolos(entorno, "Mientras");
+        entornoMientras.esCiclo = true;
 
         if (bloque != null) {
             for (Instruccion inst : bloque) {
@@ -57,10 +77,14 @@ public class NodoMientras extends Instruccion {
             }
         }
 
+        // Retirar las etiquetas de las pilas al salir del contexto del ciclo
         gen.etiquetasBreak.pop();
         gen.etiquetasContinue.pop();
 
-        gen.agregarCuarteta(new Goto3D(L_Condicion));
+        // Bucle: regresar incondicionalmente al inicio para evaluar de nuevo
+        gen.agregarCuarteta(new Goto3D(L_Inicio));
+
+        // --- ETIQUETA DE SALIDA ---
         gen.agregarCuarteta(new DefinicionEtiqueta3D(L_Falso));
 
         return null;

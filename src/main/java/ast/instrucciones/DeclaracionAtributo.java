@@ -7,7 +7,7 @@ import semantico.TipoDato;
 public class DeclaracionAtributo extends Instruccion {
     public String visibilidad;
     public TipoDato tipo;
-    public String tipoObjeto; // Almacena el nombre de la clase si el tipo es un objeto
+    public String tipoObjeto;
     public String idVariable;
     public boolean esArreglo;
 
@@ -22,6 +22,7 @@ public class DeclaracionAtributo extends Instruccion {
 
     @Override
     public Object generar(TablaSimbolos entorno) {
+        // La generación real la maneja DefinicionClase al calcular los offsets.
         return null;
     }
 }

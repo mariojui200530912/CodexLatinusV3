@@ -8,75 +8,77 @@ import semantico.Simbolo;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DefinicionMetodo extends Instruccion {
-    public String visibilidad;
-    public boolean esOverride;
-    public TipoDato tipoRetorno;
-    public String tipoObjeto; // Por si retorna otra clase
     public String idMetodo;
-    public List<Simbolo> parametros;
+    public String nombreClase;
+    public TipoDato tipoRetorno;
+    public String tipoObjetoRetorno;
+    public List<DefinicionFuncion.ParametroFormal> parametros;
     public List<Instruccion> bloque;
+    public String visibilidad;
 
-    public DefinicionMetodo(String visibilidad, boolean esOverride, TipoDato tipoRetorno, String tipoObjeto, String idMetodo, List<Simbolo> parametros, List<Instruccion> bloque, int linea, int columna) {
+    public DefinicionMetodo(String idMetodo, TipoDato tipoRetorno, String tipoObjetoRetorno, List<DefinicionFuncion.ParametroFormal> parametros, List<Instruccion> bloque, String visibilidad, int linea, int columna) {
         super(linea, columna);
-        this.visibilidad = visibilidad != null ? visibilidad : "default";
-        this.esOverride = esOverride;
-        this.tipoRetorno = tipoRetorno;
-        this.tipoObjeto = tipoObjeto;
         this.idMetodo = idMetodo;
+        this.tipoRetorno = tipoRetorno;
+        this.tipoObjetoRetorno = tipoObjetoRetorno;
         this.parametros = parametros;
         this.bloque = bloque;
+        this.visibilidad = visibilidad != null ? visibilidad : "default";
     }
 
     @Override
-    public Object generar(TablaSimbolos entorno) {
+    public Object generar(TablaSimbolos entornoClase) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        // Extraer nombre de la clase para evitar colisiones en C3D
-        String nombreClase = entorno.nombreEntorno.replace("Clase_", "");
-        String nombreUnicoMetodo = nombreClase + "_" + idMetodo;
-
-        // Registrar el metodo en la Tabla de Simbolos de la clase
-        Simbolo simMetodo = new Simbolo(idMetodo, tipoRetorno.toString(), "Metodo", visibilidad, null);
-        simMetodo.parametros = this.parametros;
-
-        if (esOverride) {
-            // Aquí puedes agregar la validación semántica buscando el método en la clasePadre
-        }
-
-        if (!entorno.insertar(simMetodo)) {
+        if (entornoClase.tabla.containsKey(idMetodo)) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "El método '" + idMetodo + "' ya está definido en la clase.", linea, columna
+                    TipoError.SEMANTICO, "El método '" + idMetodo + "' ya está definido en la clase '" + nombreClase + "'.", linea, columna
             );
             return null;
         }
 
-        // Crear entorno local y configurar memoria en el Stack
-        TablaSimbolos entornoLocal = new TablaSimbolos(entorno, "Metodo_" + idMetodo);
+        String tipoStr = (tipoRetorno == TipoDato.OBJETO && tipoObjetoRetorno != null) ? tipoObjetoRetorno : tipoRetorno.toString();
+        Simbolo simMetodo = new Simbolo(idMetodo, tipoStr, "Metodo", visibilidad, null);
+        entornoClase.insertar(simMetodo);
 
-        // El offset inicia en 1 porque la posición 0 del Stack Local contendrá el puntero 'this'
+        String nombreUnicoMetodo = nombreClase + "_" + idMetodo;
+        TablaSimbolos entornoLocal = new TablaSimbolos(entornoClase, "Metodo_" + nombreUnicoMetodo);
         entornoLocal.offset = 1;
 
-        // Inyectamos 'this' implícitamente
-        Simbolo simThis = new Simbolo("this", nombreClase, "Instancia");
-        simThis.direccionMemoria = 0;
-        entornoLocal.tabla.put("this", simThis);
+        // El NodoRetornar buscará este símbolo "$retorno" para validar que devuelva el tipo correcto
+        entornoLocal.insertar(new Simbolo("$retorno", tipoStr, "Metadato"));
 
-        // Guardamos los parametros formales
+        Simbolo simThis = new Simbolo("this", nombreClase, "Variable");
+        simThis.direccionMemoria = entornoLocal.offset++;
+        entornoLocal.insertar(simThis);
+        simMetodo.parametros.add(simThis);
+
         if (parametros != null) {
-            for (Simbolo param : parametros) {
-                entornoLocal.insertar(param);
+            Set<String> nombresParametros = new HashSet<>();
+
+            for (DefinicionFuncion.ParametroFormal param : parametros) {
+                if (!nombresParametros.add(param.id)) {
+                    GestorErrores.getInstancia().agregarError(
+                            TipoError.SEMANTICO, "El parámetro '" + param.id + "' está duplicado en la definición del método '" + idMetodo + "'.", linea, columna
+                    );
+                    continue;
+                }
+
+                String tipoParamStr = (param.tipo == TipoDato.OBJETO) ? param.tipoObjeto : param.tipo.toString();
+                Simbolo simParam = new Simbolo(param.id, tipoParamStr, "Variable");
+
+                simParam.direccionMemoria = entornoLocal.offset++;
+                simMetodo.parametros.add(simParam);
+                entornoLocal.insertar(simParam);
             }
         }
 
-        // Generación de Cuartetas C3D
-        gen.setEnFuncion(true);
-        gen.agregarPrototipo(nombreUnicoMetodo);
-
-        // Agrega la cuarteta que inicia el bloque de la función en C/RISC-V
-        // gen.agregarCuarteta(new DefinicionMetodo3D(nombreUnicoMetodo));
+        gen.agregarCodigoEnBruto("void " + nombreUnicoMetodo + "() {");
 
         if (bloque != null) {
             for (Instruccion inst : bloque) {
@@ -84,9 +86,7 @@ public class DefinicionMetodo extends Instruccion {
             }
         }
 
-        // gen.agregarCuarteta(new FinMetodo3D());
-        gen.setEnFuncion(false);
-
+        gen.agregarCodigoEnBruto("    return;\n}\n");
         return null;
     }
 }

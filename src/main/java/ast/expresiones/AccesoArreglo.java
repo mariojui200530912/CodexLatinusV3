@@ -12,53 +12,66 @@ import generador.GeneradorC3D;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
 
-import java.util.List;
-
 public class AccesoArreglo extends Expresion {
     public Expresion arregloBase;
-    public List<Expresion> indices;
-    public boolean esDestino = false;
+    public Expresion indice;
+    public boolean esDestino = false; // true si está a la izquierda de una asignación
 
-    public AccesoArreglo(Expresion arregloBase, List<Expresion> indices, int linea, int columna) {
+    public AccesoArreglo(Expresion arregloBase, Expresion indice, int linea, int columna) {
         super(linea, columna);
         this.arregloBase = arregloBase;
-        this.indices = indices;
+        this.indice = indice;
     }
 
     @Override
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
+        //  Evaluar el arreglo base (devuelve el puntero base en el Heap)
         ResultadoC3D resBase = (ResultadoC3D) arregloBase.generar(entorno);
 
-        if (resBase == null || resBase.tipo == TipoDato.ERROR) {
+        // Evaluar la expresión del índice
+        ResultadoC3D resIndice = (ResultadoC3D) indice.generar(entorno);
+
+        if (resBase == null || resIndice == null || resBase.tipo == TipoDato.ERROR || resIndice.tipo == TipoDato.ERROR) {
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        ResultadoC3D resIndice = (ResultadoC3D) indices.get(0).generar(entorno);
-
+        // Validación Semántica
         if (resIndice.tipo != TipoDato.ENTERO) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "El índice del arreglo debe ser un número entero.", linea, columna
+                    TipoError.SEMANTICO,
+                    "El índice para acceder a un arreglo debe ser de tipo ENTERO. Se encontró: " + resIndice.tipo,
+                    linea, columna
             );
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Calcular posicion: Dirección Base (Heap) + Índice
-        AccesoTemporal t_posicion = new AccesoTemporal(gen.generarTemporal());
+        // Calcular la dirección física en el Heap: dir = base + indice + 1
+        AccesoTemporal t_desplazamiento = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
-                t_posicion, resBase.valorC3D, "+", resIndice.valorC3D
+                t_desplazamiento, resIndice.valorC3D, "+", new Literal3D("1")
         ));
 
-        this.tipo = resBase.tipo;
+        AccesoTemporal t_direccion = new AccesoTemporal(gen.generarTemporal());
+        gen.agregarCuarteta(new OperacionBinaria3D(
+                t_direccion, resBase.valorC3D, "+", t_desplazamiento
+        ));
 
+        // Retornar dirección si es asignación, o extraer el valor si es lectura
         if (esDestino) {
-            return new ResultadoC3D(t_posicion, this.tipo);
+            ResultadoC3D res = new ResultadoC3D(t_direccion, resBase.tipo);
+            res.tipoStringOriginal = resBase.tipoStringOriginal;
+            res.esArreglo = false; // El elemento extraído ya no es un arreglo en sí
+            return res;
+        } else {
+            AccesoTemporal t_valor = new AccesoTemporal(gen.generarTemporal());
+            gen.agregarCuarteta(new GetHeap3D(t_valor, t_direccion));
+
+            ResultadoC3D res = new ResultadoC3D(t_valor, resBase.tipo);
+            res.tipoStringOriginal = resBase.tipoStringOriginal;
+            res.esArreglo = false;
+            return res;
         }
-
-        AccesoTemporal t_valor = new AccesoTemporal(gen.generarTemporal());
-        gen.agregarCuarteta(new GetHeap3D(t_valor, t_posicion));
-
-        return new ResultadoC3D(t_valor, this.tipo);
     }
 }
