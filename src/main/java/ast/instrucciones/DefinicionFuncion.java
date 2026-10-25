@@ -1,13 +1,14 @@
 package ast.instrucciones;
 
 import ast.Instruccion;
+import cuartetas.DefinicionEtiqueta3D;
+import cuartetas.Return3D;
 import errores.GestorErrores;
 import errores.TipoError;
 import generador.GeneradorC3D;
 import semantico.Simbolo;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
-import semantico.ValidadorTipos;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class DefinicionFuncion extends Instruccion {
         // Validar que la función no exista ya en el mismo ambito
         if (entorno.tabla.containsKey(idFuncion)) {
             GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "La función o método '" + idFuncion + "' ya está definida.", linea, columna
+                    TipoError.SEMANTICO, "La función '" + idFuncion + "' ya está definida.", linea, columna
             );
             return null;
         }
@@ -50,6 +51,9 @@ public class DefinicionFuncion extends Instruccion {
         // El offset 0 está reservado para el valor de retorno ('return')
         entornoLocal.offset = 1;
 
+        // INYECCIÓN DEL METADATO DE RETORNO (Crucial para que NodoRetornar lo encuentre)
+        entornoLocal.insertar(new Simbolo("$retorno", tipoString, "Metadato"));
+
         // Registrar los parametros en el entorno local
         if (parametros != null) {
             for (ParametroFormal param : parametros) {
@@ -64,17 +68,17 @@ public class DefinicionFuncion extends Instruccion {
         }
 
         // Iniciar la etiqueta de la funcion en C3D
-        gen.agregarCodigoEnBruto("void " + idFuncion + "() {");
+        gen.agregarCuarteta(new DefinicionEtiqueta3D(idFuncion));
 
-        // 6. Generar el código de las instrucciones internas
+        // Generar el código de las instrucciones internas
         if (bloque != null) {
             for (Instruccion inst : bloque) {
                 if (inst != null) inst.generar(entornoLocal);
             }
         }
 
-        // Cerrar la funcion
-        gen.agregarCodigoEnBruto("    return;\n}\n");
+        // Emitir instrucción de retorno por defecto al final del bloque
+        gen.agregarCuarteta(new Return3D());
 
         return null;
     }

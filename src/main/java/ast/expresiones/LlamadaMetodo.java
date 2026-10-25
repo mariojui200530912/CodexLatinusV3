@@ -48,7 +48,7 @@ public class LlamadaMetodo extends Expresion {
 
         // Buscar la clase y el metodo
         Simbolo simMetodo = null;
-        TablaSimbolos entornoClase = GeneradorC3D.obtenerEntornoClase(nombreClase);
+        TablaSimbolos entornoClase = GeneradorC3D.getInstancia().obtenerEntornoClase(nombreClase);
         if (entornoClase != null) {
             simMetodo = entornoClase.buscarLocal(idMetodo);
         }

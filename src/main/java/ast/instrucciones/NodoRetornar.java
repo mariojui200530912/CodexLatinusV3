@@ -4,6 +4,7 @@ import ast.Expresion;
 import ast.Instruccion;
 import ast.ResultadoC3D;
 import cuartetas.PunteroGlobal3D;
+import cuartetas.Return3D;
 import cuartetas.SetStack3D;
 import errores.GestorErrores;
 import errores.TipoError;
@@ -38,7 +39,7 @@ public class NodoRetornar extends Instruccion {
         }
 
         TipoDato tipoEsperado = ValidadorTipos.parsearTipo(simRetorno.tipo);
-        String tipoObjetoEsperado = simRetorno.tipo; // Para validación de clases/polimorfismo
+        String tipoObjetoEsperado = simRetorno.tipo;
 
         // Caso A: Retorno vacío (return;)
         if (expresion == null) {
@@ -49,8 +50,8 @@ public class NodoRetornar extends Instruccion {
                         linea, columna
                 );
             } else {
-                // Emitir salto de retorno (en C3D lo simulamos con la palabra clave nativa o un goto al final)
-                gen.agregarCodigoEnBruto("    return;");
+                // Emitir salto de retorno de forma estructurada mediante Cuarteta
+                gen.agregarCuarteta(new Return3D());
             }
             return null;
         }
@@ -69,7 +70,7 @@ public class NodoRetornar extends Instruccion {
         ResultadoC3D resValor = (ResultadoC3D) expresion.generar(entorno);
 
         if (resValor == null || resValor.tipo == TipoDato.ERROR) {
-            return null; // Error previo propagado
+            return null;
         }
 
         // VALIDACION SEMANTICA
@@ -118,7 +119,8 @@ public class NodoRetornar extends Instruccion {
         // Guardar el valor de retorno en la posición 0 del Stack actual: Stack[(int) P] = valor
         gen.agregarCuarteta(new SetStack3D(new PunteroGlobal3D("P"), resValor.valorC3D));
 
-        gen.agregarCodigoEnBruto("    return;");
+        // Emitir el retorno (el equivalente a 'ret' o 'jr ra' en ensamblador)
+        gen.agregarCuarteta(new Return3D());
 
         return null;
     }

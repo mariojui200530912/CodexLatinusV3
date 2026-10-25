@@ -1,6 +1,8 @@
 package ast.instrucciones;
 
 import ast.Instruccion;
+import cuartetas.DefinicionEtiqueta3D;
+import cuartetas.Return3D;
 import errores.GestorErrores;
 import errores.TipoError;
 import generador.GeneradorC3D;
@@ -78,7 +80,8 @@ public class DefinicionMetodo extends Instruccion {
             }
         }
 
-        gen.agregarCodigoEnBruto("void " + nombreUnicoMetodo + "() {");
+        // Emitir la etiqueta de entrada de la función en C3D
+        gen.agregarCuarteta(new DefinicionEtiqueta3D(nombreUnicoMetodo));
 
         if (bloque != null) {
             for (Instruccion inst : bloque) {
@@ -86,7 +89,8 @@ public class DefinicionMetodo extends Instruccion {
             }
         }
 
-        gen.agregarCodigoEnBruto("    return;\n}\n");
+        // Emitir instrucción de retorno por defecto (cubriendo el caso en que un método void no tenga 'return;')
+        gen.agregarCuarteta(new Return3D());
         return null;
     }
 }

@@ -2,10 +2,7 @@ package ast.expresiones;
 
 import ast.Expresion;
 import ast.ResultadoC3D;
-import cuartetas.AccesoTemporal;
-import cuartetas.Asignacion3D;
-import cuartetas.Literal3D;
-import cuartetas.OperacionBinaria3D;
+import cuartetas.*;
 import errores.GestorErrores;
 import errores.TipoError;
 import generador.GeneradorC3D;

@@ -4,6 +4,7 @@ import ast.Expresion;
 import ast.ResultadoC3D;
 import cuartetas.AccesoTemporal;
 import cuartetas.Asignacion3D;
+import cuartetas.Call3D;
 import cuartetas.GetStack3D;
 import cuartetas.Literal3D;
 import cuartetas.OperacionBinaria3D;
@@ -33,7 +34,6 @@ public class LlamadaFuncion extends Expresion {
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        // Buscar la funcion en el entorno (generalmente global)
         Simbolo simFuncion = entorno.buscar(idFuncion);
 
         if (simFuncion == null || !"Funcion".equals(simFuncion.categoria)) {
@@ -43,7 +43,6 @@ public class LlamadaFuncion extends Expresion {
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Validar cantidad de argumentos vs parametros esperados
         if (argumentos.size() != simFuncion.parametros.size()) {
             GestorErrores.getInstancia().agregarError(
                     TipoError.SEMANTICO,
@@ -53,19 +52,16 @@ public class LlamadaFuncion extends Expresion {
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // Evaluar los argumentos ingresados
         List<ResultadoC3D> resultadosArgs = new ArrayList<>();
         for (Expresion arg : argumentos) {
             resultadosArgs.add((ResultadoC3D) arg.generar(entorno));
         }
 
-        // Preparar el nuevo entorno en el Stack: t_nuevoP = P + entorno.offset actual
         AccesoTemporal t_nuevoP = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
                 t_nuevoP, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
         ));
 
-        // Inyectar los parámetros en el nuevo Stack (Iniciando desde la posición 1, ya que la 0 es el return)
         for (int i = 0; i < resultadosArgs.size(); i++) {
             ResultadoC3D resArg = resultadosArgs.get(i);
             Simbolo paramFormal = simFuncion.parametros.get(i);
@@ -84,7 +80,6 @@ public class LlamadaFuncion extends Expresion {
                 return new ResultadoC3D(null, TipoDato.ERROR);
             }
 
-            // Validación de Herencia (Polimorfismo / Upcasting) para Objetos enviados como parámetros
             if (tipoEsperado == TipoDato.OBJETO && resArg.tipo == TipoDato.OBJETO) {
                 if (resArg.tipoStringOriginal != null) {
                     boolean esCompatible = false;
@@ -97,7 +92,7 @@ public class LlamadaFuncion extends Expresion {
                         }
                         Simbolo simClaseActual = entorno.buscar(claseActual);
                         if (simClaseActual != null && "Clase".equals(simClaseActual.categoria)) {
-                            claseActual = simClaseActual.clasePadre; // Subir en la jerarquía
+                            claseActual = simClaseActual.clasePadre;
                         } else {
                             break;
                         }
@@ -122,11 +117,9 @@ public class LlamadaFuncion extends Expresion {
             gen.agregarCuarteta(new SetStack3D(t_posArg, resArg.valorC3D));
         }
 
-        // Cambiar de entorno, Llamar a la función y Restaurar entorno
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_nuevoP));
 
-        // Simulación de llamada en C3D (TraductorRiscV convertirá esto en un 'jal' o 'call')
-        gen.agregarCuarteta(new Asignacion3D(new AccesoTemporal("llamar"), new Literal3D(idFuncion + "()")));
+        gen.agregarCuarteta(new Call3D(idFuncion));
 
         AccesoTemporal t_regresarP = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
@@ -134,13 +127,11 @@ public class LlamadaFuncion extends Expresion {
         ));
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_regresarP));
 
-        // Capturar valor de retorno si no es VOID (Leyendo la posición 0 del Stack recién abandonado)
         TipoDato tipoRetorno = ValidadorTipos.parsearTipo(simFuncion.tipo);
 
         if (tipoRetorno != TipoDato.VOID) {
             AccesoTemporal t_posRetorno = new AccesoTemporal(gen.generarTemporal());
 
-            // La posición 0 del entorno que acabamos de ejecutar
             gen.agregarCuarteta(new OperacionBinaria3D(
                     t_posRetorno, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
             ));

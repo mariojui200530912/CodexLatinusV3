@@ -8,10 +8,13 @@ import ast.expresiones.AccesoVariable;
 import ast.expresiones.AccesoArreglo;
 import cuartetas.SetHeap3D;
 import cuartetas.SetStack3D;
+import errores.GestorErrores;
+import errores.TipoError;
 import generador.GeneradorC3D;
 import semantico.Simbolo;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
+import semantico.ValidadorTipos;
 
 public class Asignacion extends Instruccion {
     public Expresion destino; // AccesoVariable, AccesoPropiedad o AccesoArreglo

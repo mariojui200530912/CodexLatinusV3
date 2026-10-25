@@ -3,6 +3,7 @@ package ast.instrucciones;
 import ast.Instruccion;
 import errores.GestorErrores;
 import errores.TipoError;
+import generador.GeneradorC3D;
 import semantico.Simbolo;
 import semantico.TablaSimbolos;
 
@@ -38,6 +39,8 @@ public class DefinicionClase extends Instruccion {
 
         // Crear el entorno específico de la clase (Scope)
         TablaSimbolos entornoClase = new TablaSimbolos(entornoGlobal, "Clase_" + nombreClase);
+
+        GeneradorC3D.getInstancia().guardarEntornoClase(nombreClase, entornoClase);
 
         // Si hay herencia, debemos buscar los atributos del padre para heredar el offset inicial
         int offsetAtributos = 0;
