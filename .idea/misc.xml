@@ -13,6 +13,26 @@
           <option name="language" value="" />
           <option name="generateVisitor" value="true" />
         </PerGrammarGenerationSettings>
+        <PerGrammarGenerationSettings>
+          <option name="fileName" value="$PROJECT_DIR$/src/main/antlr4/lenguajeY/LenguajeY.g4" />
+          <option name="autoGen" value="true" />
+          <option name="outputDir" value="C:\Users\Hp\IntelliJProjects\CodexLatinusV3\src\main\java\" />
+          <option name="libDir" value="C:\Users\Hp\IntelliJProjects\CodexLatinusV3\src\main\antlr4\lenguajeY" />
+          <option name="encoding" value="" />
+          <option name="pkg" value="gramaticas.y" />
+          <option name="language" value="" />
+          <option name="generateVisitor" value="true" />
+        </PerGrammarGenerationSettings>
+        <PerGrammarGenerationSettings>
+          <option name="fileName" value="$PROJECT_DIR$/src/main/antlr4/pigLatin/PigLatin.g4" />
+          <option name="autoGen" value="true" />
+          <option name="outputDir" value="C:\Users\Hp\IntelliJProjects\CodexLatinusV3\src\main\java\" />
+          <option name="libDir" value="C:\Users\Hp\IntelliJProjects\CodexLatinusV3\src\main\antlr4\pigLatin" />
+          <option name="encoding" value="" />
+          <option name="pkg" value="gramaticas.pigLatin" />
+          <option name="language" value="" />
+          <option name="generateVisitor" value="true" />
+        </PerGrammarGenerationSettings>
       </list>
     </option>
   </component>

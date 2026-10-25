@@ -43,7 +43,6 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
             if (inst != null) instrucciones.add(inst);
         }
 
-        // Ahora enviamos los 6 parámetros en el orden correcto
         return new DefinicionClase(idClase, idPadre, visibilidad, instrucciones, linea, col);
     }
 
