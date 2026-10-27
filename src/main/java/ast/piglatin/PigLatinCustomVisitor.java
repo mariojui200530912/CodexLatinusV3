@@ -17,24 +17,17 @@ import java.util.List;
 
 public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
 
-    // --- PROGRAMA PRINCIPAL ---
-
     @Override
     public Object visitPrograma(PigLatinParser.ProgramaContext ctx) {
         List<Instruccion> programa = new ArrayList<>();
-
         if (ctx.seccionVariables() != null) {
             programa.addAll((List<Instruccion>) visit(ctx.seccionVariables()));
         }
-
         if (ctx.seccionPrincipal() != null) {
             programa.addAll((List<Instruccion>) visit(ctx.seccionPrincipal()));
         }
-
         return programa;
     }
-
-    // --- SECCIÓN DE VARIABLES (Declaraciones Globales) ---
 
     @Override
     public Object visitSeccionVariables(PigLatinParser.SeccionVariablesContext ctx) {
@@ -51,12 +44,16 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         int col = ctx.getStart().getCharPositionInLine();
 
         String id = ctx.ID().getText();
-        String tipoStr = ctx.tipoDato().getText();
-        TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
-        String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
+        TipoDato tipo = TipoDato.NULO; // Por defecto para inferencia
+        String tipoObj = null;
+
+        if (ctx.tipoDato() != null) {
+            String tipoStr = ctx.tipoDato().getText();
+            tipo = ValidadorTipos.parsearTipo(tipoStr);
+            tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
+        }
 
         Expresion valor = (Expresion) visit(ctx.expresion());
-
         return new Declaracion(id, tipo, tipoObj, valor, linea, col);
     }
 
@@ -66,15 +63,15 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         int col = ctx.getStart().getCharPositionInLine();
 
         String id = ctx.ID().getText();
-
-        String tipoObjeto = ctx.tipoDato(1).getText();
         String claseInstancia = ctx.tipoDato(0).getText();
+
+        // Si hay un segundo tipoDato, es el tipo explícito; si no, es el mismo de la instancia
+        String tipoObjeto = (ctx.tipoDato().size() > 1) ? ctx.tipoDato(1).getText() : claseInstancia;
 
         List<Expresion> args = new ArrayList<>();
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
 
         Expresion valor = new InstanciaObjeto(claseInstancia, args, linea, col);
-
         return new Declaracion(id, TipoDato.OBJETO, tipoObjeto, valor, linea, col);
     }
 
@@ -87,7 +84,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         String tipoObjeto = ctx.tipoDato().getText();
 
         Expresion valorNull = new Primitivo("null", TipoDato.NULO, linea, col);
-
         return new Declaracion(id, TipoDato.OBJETO, tipoObjeto, valorNull, linea, col);
     }
 
@@ -103,14 +99,12 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
 
         Expresion valor;
         if (ctx.LLAVE_A() != null) {
-            // Arreglo literal: series arr[3] : numerus {1, 2, 3};
             List<Expresion> elementos = new ArrayList<>();
             if (ctx.argumentos() != null) elementos = (List<Expresion>) visit(ctx.argumentos());
             valor = new ArregloLiteral(elementos, linea, col);
         } else {
-            // Arreglo vacío: series arr[3] : numerus;
             Expresion tamano = (Expresion) visit(ctx.expresion());
-            valor = new InstanciaArreglo(tipo, tamano, linea, col);
+            valor = new InstanciaArreglo(tipo, Arrays.asList(tamano), linea, col); // Soporte a lista de dimensiones
         }
 
         Declaracion decl = new Declaracion(id, tipo, tipoObj, valor, linea, col);
@@ -118,14 +112,11 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         return decl;
     }
 
-    // --- SECCIÓN PRINCIPAL ---
-
     @Override
     public Object visitSeccionPrincipal(PigLatinParser.SeccionPrincipalContext ctx) {
         List<Instruccion> bloque = new ArrayList<>();
         for (PigLatinParser.InstruccionContext instCtx : ctx.instruccion()) {
             Object res = visit(instCtx);
-            // Algunas instrucciones como '>> a >> b;' retornan una lista de Imprimir
             if (res instanceof List) {
                 bloque.addAll((List<Instruccion>) res);
             } else if (res instanceof Instruccion) {
@@ -134,8 +125,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         }
         return bloque;
     }
-
-    // --- INSTRUCCIONES ---
 
     @Override
     public Object visitInstAsignacion(PigLatinParser.InstAsignacionContext ctx) {
@@ -173,17 +162,28 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
     }
 
     @Override
+    public Object visitInstLeerVar(PigLatinParser.InstLeerVarContext ctx) {
+        int linea = ctx.getStart().getLine();
+        int col = ctx.getStart().getCharPositionInLine();
+        LlamadaFuncion leer = new LlamadaFuncion("leer", new ArrayList<>(), linea, col);
+
+        if (ctx.acceso() != null) {
+            Expresion destino = (Expresion) visit(ctx.acceso());
+            return new Asignacion(destino, leer, linea, col);
+        }
+        return leer;
+    }
+
+    @Override
     public Object visitInstImprimir(PigLatinParser.InstImprimirContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
         List<Instruccion> impresiones = new ArrayList<>();
-        // Múltiples >> en la misma línea: ">> expr1 >> expr2;"
         for (PigLatinParser.ExpresionContext exprCtx : ctx.expresion()) {
             Expresion expr = (Expresion) visit(exprCtx);
             impresiones.add(new Imprimir(expr, true, linea, col));
         }
-
         return impresiones;
     }
 
@@ -193,7 +193,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         int col = ctx.getStart().getCharPositionInLine();
 
         Expresion condPrincipal = (Expresion) visit(ctx.expresion(0));
-
         List<Instruccion> bloquePrincipal = aplanarBloque(ctx.instruccion(0));
 
         class AliterData {
@@ -205,10 +204,10 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         int exprIndex = 1;
         int instIndex = 1;
 
-        for(int i = 0; i < ctx.getChildCount(); i++){
-            if(ctx.getChild(i).getText().equals("aliter")){
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            if (ctx.getChild(i).getText().equals("aliter")) {
                 AliterData ad = new AliterData();
-                if(ctx.getChild(i+1).getText().equals("(")) { // Es un else if
+                if (ctx.getChild(i+1).getText().equals("(")) {
                     ad.cond = (Expresion) visit(ctx.expresion(exprIndex++));
                 }
                 ad.bloque = aplanarBloque(ctx.instruccion(instIndex++));
@@ -219,10 +218,10 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         List<Instruccion> bloqueFalsoFinal = new ArrayList<>();
         NodoIf ifAnidado = null;
 
-        for(int i = aliters.size() - 1; i >= 0; i--) {
+        for (int i = aliters.size() - 1; i >= 0; i--) {
             AliterData ad = aliters.get(i);
             if (ad.cond == null) {
-                bloqueFalsoFinal = ad.bloque; // Es un ELSE terminal
+                bloqueFalsoFinal = ad.bloque;
             } else {
                 List<Instruccion> falsoDeEste = (ifAnidado != null) ? Arrays.asList(ifAnidado) : bloqueFalsoFinal;
                 ifAnidado = new NodoIf(ad.cond, ad.bloque, falsoDeEste, linea, col);
@@ -244,7 +243,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
     public Object visitInstFacere(PigLatinParser.InstFacereContext ctx) {
         Expresion condicion = (Expresion) visit(ctx.expresion());
         List<Instruccion> bloque = aplanarBloque(ctx.instruccion());
-
         return new NodoHacerMientras(bloque, condicion, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
@@ -254,12 +252,13 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         int col = ctx.getStart().getCharPositionInLine();
 
         Instruccion inicializacion;
-        if (ctx.ESTO() != null) { // per(esto i: numerus 0; ...)
+        if (ctx.ESTO() != null) {
             String id = ctx.ID().getText();
-            TipoDato tipo = ValidadorTipos.parsearTipo(ctx.tipoDato().getText());
+            TipoDato tipo = TipoDato.NULO;
+            if (ctx.tipoDato() != null) tipo = ValidadorTipos.parsearTipo(ctx.tipoDato().getText());
             Expresion val = (Expresion) visit(ctx.expresion(0));
             inicializacion = new Declaracion(id, tipo, null, val, linea, col);
-        } else { // per(i = 0; ...)
+        } else {
             Expresion destino = (Expresion) visit(ctx.acceso(0));
             Expresion val = (Expresion) visit(ctx.expresion(0));
             inicializacion = new Asignacion(destino, val, linea, col);
@@ -293,8 +292,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         return new NodoContinue(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
-    // --- FUNCION UTILITARIA ---
-    // Metodo original: Procesa una sola instrucción (y la aplana si retorna múltiples, como los '>>')
     private List<Instruccion> aplanarBloque(PigLatinParser.InstruccionContext instCtx) {
         List<Instruccion> bloque = new ArrayList<>();
         Object res = visit(instCtx);
@@ -306,7 +303,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         return bloque;
     }
 
-    // Metodo sobrecargado: Procesa una lista de instrucciones iterando sobre ella
     private List<Instruccion> aplanarBloque(List<PigLatinParser.InstruccionContext> listaCtx) {
         List<Instruccion> bloque = new ArrayList<>();
         if (listaCtx != null) {
@@ -316,8 +312,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         }
         return bloque;
     }
-
-    // --- ACCESO A VARIABLES, ARREGLOS Y PROPIEDADES ---
 
     @Override
     public Object visitAcceso(PigLatinParser.AccesoContext ctx) {
@@ -335,7 +329,16 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
                 actual = new AccesoPropiedad(actual, prop, linea, col);
             } else if (texto.equals("[")) {
                 Expresion indice = (Expresion) visit(ctx.expresion(exprIndex++));
-                actual = new AccesoArreglo(actual, indice, linea, col);
+
+                if (actual instanceof AccesoArreglo) {
+                    // Agrupar índices contiguos en el mismo nodo
+                    ((AccesoArreglo) actual).indices.add(indice);
+                } else {
+                    // Primer índice: crear el nodo
+                    List<Expresion> listaIndices = new ArrayList<>();
+                    listaIndices.add(indice);
+                    actual = new AccesoArreglo(actual, listaIndices, linea, col);
+                }
             }
         }
         return actual;
@@ -349,8 +352,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         }
         return args;
     }
-
-    // --- EXPRESIONES BÁSICAS ---
 
     @Override
     public Object visitExprSumaResta(PigLatinParser.ExprSumaRestaContext ctx) {
@@ -434,8 +435,6 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
         return new InstanciaObjeto(idClase, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
-
-    // --- PRIMITIVOS ---
 
     @Override
     public Object visitExprEntero(PigLatinParser.ExprEnteroContext ctx) {

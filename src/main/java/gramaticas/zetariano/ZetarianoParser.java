@@ -18,27 +18,31 @@ public class ZetarianoParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		PUBLIC=1, PRIVATE=2, PROTECTED=3, CLASS=4, EXTENDS=5, OVERRIDE=6, VOID=7, 
-		RETURN=8, IF=9, ELSE=10, FOR=11, NEW=12, THIS=13, PRINTLN=14, TRUE=15, 
-		FALSE=16, NULL_LITERAL=17, INT=18, DOUBLE=19, FLOAT=20, STRING=21, CHAR=22, 
-		BOOLEAN=23, PAREN_A=24, PAREN_C=25, LLAVE_A=26, LLAVE_C=27, CORCHETE_A=28, 
-		CORCHETE_C=29, PUNTOCOMA=30, PUNTO=31, COMA=32, IGUAL=33, MAS_IGUAL=34, 
-		MENOS_IGUAL=35, MAS_MAS=36, MENOS_MENOS=37, MAS=38, MENOS=39, MULT=40, 
-		DIV=41, MAYOR=42, MENOR=43, MAYOR_IG=44, MENOR_IG=45, IGUAL_IGUAL=46, 
-		NOT_IGUAL=47, AND=48, OR=49, NOT=50, ID=51, ENTERO_LITERAL=52, DOUBLE_LITERAL=53, 
-		CADENA=54, WS=55, COMENTARIO_LINEA=56, COMENTARIO_BLOQUE=57;
+		RETURN=8, IF=9, ELSE=10, FOR=11, WHILE=12, DO=13, SWITCH=14, CASE=15, 
+		DEFAULT=16, BREAK=17, CONTINUE=18, NEW=19, THIS=20, PRINTLN=21, PRINT=22, 
+		READLN=23, TRUE=24, FALSE=25, NULL_LITERAL=26, INT=27, DOUBLE=28, FLOAT=29, 
+		STRING=30, CHAR=31, BOOLEAN=32, PAREN_A=33, PAREN_C=34, LLAVE_A=35, LLAVE_C=36, 
+		CORCHETE_A=37, CORCHETE_C=38, PUNTOCOMA=39, PUNTO=40, COMA=41, DOS_PUNTOS=42, 
+		INTERROGACION=43, IGUAL=44, MAS_IGUAL=45, MENOS_IGUAL=46, MULT_IGUAL=47, 
+		MAS_MAS=48, MENOS_MENOS=49, MAS=50, MENOS=51, MULT=52, DIV=53, MODULO=54, 
+		MAYOR=55, MENOR=56, MAYOR_IG=57, MENOR_IG=58, IGUAL_IGUAL=59, NOT_IGUAL=60, 
+		AND=61, OR=62, NOT=63, ID=64, ENTERO_LITERAL=65, DOUBLE_LITERAL=66, CADENA=67, 
+		CARACTER_LITERAL=68, WS=69, COMENTARIO_LINEA=70, COMENTARIO_BLOQUE=71;
 	public static final int
 		RULE_programa = 0, RULE_definicionClase = 1, RULE_miembroClase = 2, RULE_modificadorAcceso = 3, 
-		RULE_tipoDato = 4, RULE_declaracionAtributo = 5, RULE_constructor = 6, 
-		RULE_definicionMetodo = 7, RULE_parametros = 8, RULE_parametro = 9, RULE_bloque = 10, 
-		RULE_instruccion = 11, RULE_declaracionLocal = 12, RULE_asignacionOMetodo = 13, 
-		RULE_ifStmt = 14, RULE_forStmt = 15, RULE_argumentos = 16, RULE_acceso = 17, 
-		RULE_expresion = 18;
+		RULE_tipoDato = 4, RULE_tipoEstructura = 5, RULE_declaracionAtributo = 6, 
+		RULE_constructor = 7, RULE_definicionMetodo = 8, RULE_parametros = 9, 
+		RULE_parametro = 10, RULE_bloque = 11, RULE_instruccion = 12, RULE_declaracionLocal = 13, 
+		RULE_asignacionOMetodo = 14, RULE_ifStmt = 15, RULE_forStmt = 16, RULE_whileStmt = 17, 
+		RULE_doWhileStmt = 18, RULE_switchStmt = 19, RULE_caseCode = 20, RULE_defaultCode = 21, 
+		RULE_argumentos = 22, RULE_acceso = 23, RULE_expresion = 24;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"programa", "definicionClase", "miembroClase", "modificadorAcceso", "tipoDato", 
-			"declaracionAtributo", "constructor", "definicionMetodo", "parametros", 
-			"parametro", "bloque", "instruccion", "declaracionLocal", "asignacionOMetodo", 
-			"ifStmt", "forStmt", "argumentos", "acceso", "expresion"
+			"tipoEstructura", "declaracionAtributo", "constructor", "definicionMetodo", 
+			"parametros", "parametro", "bloque", "instruccion", "declaracionLocal", 
+			"asignacionOMetodo", "ifStmt", "forStmt", "whileStmt", "doWhileStmt", 
+			"switchStmt", "caseCode", "defaultCode", "argumentos", "acceso", "expresion"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -46,25 +50,29 @@ public class ZetarianoParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'public'", "'private'", "'protected'", "'class'", "'extends'", 
-			"'@Override'", "'void'", "'return'", "'if'", "'else'", "'for'", "'new'", 
-			"'this'", "'println'", "'true'", "'false'", "'null'", "'int'", "'double'", 
-			"'float'", "'String'", "'char'", "'boolean'", "'('", "')'", "'{'", "'}'", 
-			"'['", "']'", "';'", "'.'", "','", "'='", "'+='", "'-='", "'++'", "'--'", 
-			"'+'", "'-'", "'*'", "'/'", "'>'", "'<'", "'>='", "'<='", "'=='", "'!='", 
-			"'&&'", "'||'", "'!'"
+			"'@Override'", "'void'", "'return'", "'if'", "'else'", "'for'", "'while'", 
+			"'do'", "'switch'", "'case'", "'default'", "'break'", "'continue'", "'new'", 
+			"'this'", "'println'", "'print'", "'readln'", "'true'", "'false'", "'null'", 
+			"'int'", "'double'", "'float'", "'String'", "'char'", "'boolean'", "'('", 
+			"')'", "'{'", "'}'", "'['", "']'", "';'", "'.'", "','", "':'", "'?'", 
+			"'='", "'+='", "'-='", "'*='", "'++'", "'--'", "'+'", "'-'", "'*'", "'/'", 
+			"'%'", "'>'", "'<'", "'>='", "'<='", "'=='", "'!='", "'&&'", "'||'", 
+			"'!'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, "PUBLIC", "PRIVATE", "PROTECTED", "CLASS", "EXTENDS", "OVERRIDE", 
-			"VOID", "RETURN", "IF", "ELSE", "FOR", "NEW", "THIS", "PRINTLN", "TRUE", 
-			"FALSE", "NULL_LITERAL", "INT", "DOUBLE", "FLOAT", "STRING", "CHAR", 
-			"BOOLEAN", "PAREN_A", "PAREN_C", "LLAVE_A", "LLAVE_C", "CORCHETE_A", 
-			"CORCHETE_C", "PUNTOCOMA", "PUNTO", "COMA", "IGUAL", "MAS_IGUAL", "MENOS_IGUAL", 
-			"MAS_MAS", "MENOS_MENOS", "MAS", "MENOS", "MULT", "DIV", "MAYOR", "MENOR", 
-			"MAYOR_IG", "MENOR_IG", "IGUAL_IGUAL", "NOT_IGUAL", "AND", "OR", "NOT", 
-			"ID", "ENTERO_LITERAL", "DOUBLE_LITERAL", "CADENA", "WS", "COMENTARIO_LINEA", 
+			"VOID", "RETURN", "IF", "ELSE", "FOR", "WHILE", "DO", "SWITCH", "CASE", 
+			"DEFAULT", "BREAK", "CONTINUE", "NEW", "THIS", "PRINTLN", "PRINT", "READLN", 
+			"TRUE", "FALSE", "NULL_LITERAL", "INT", "DOUBLE", "FLOAT", "STRING", 
+			"CHAR", "BOOLEAN", "PAREN_A", "PAREN_C", "LLAVE_A", "LLAVE_C", "CORCHETE_A", 
+			"CORCHETE_C", "PUNTOCOMA", "PUNTO", "COMA", "DOS_PUNTOS", "INTERROGACION", 
+			"IGUAL", "MAS_IGUAL", "MENOS_IGUAL", "MULT_IGUAL", "MAS_MAS", "MENOS_MENOS", 
+			"MAS", "MENOS", "MULT", "DIV", "MODULO", "MAYOR", "MENOR", "MAYOR_IG", 
+			"MENOR_IG", "IGUAL_IGUAL", "NOT_IGUAL", "AND", "OR", "NOT", "ID", "ENTERO_LITERAL", 
+			"DOUBLE_LITERAL", "CADENA", "CARACTER_LITERAL", "WS", "COMENTARIO_LINEA", 
 			"COMENTARIO_BLOQUE"
 		};
 	}
@@ -154,21 +162,21 @@ public class ZetarianoParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(39); 
+			setState(51); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(38);
+				setState(50);
 				definicionClase();
 				}
 				}
-				setState(41); 
+				setState(53); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 30L) != 0) );
-			setState(43);
+			setState(55);
 			match(EOF);
 			}
 		}
@@ -228,49 +236,49 @@ public class ZetarianoParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(46);
+			setState(58);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14L) != 0)) {
 				{
-				setState(45);
+				setState(57);
 				modificadorAcceso();
 				}
 			}
 
-			setState(48);
+			setState(60);
 			match(CLASS);
-			setState(49);
+			setState(61);
 			match(ID);
-			setState(52);
+			setState(64);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==EXTENDS) {
 				{
-				setState(50);
+				setState(62);
 				match(EXTENDS);
-				setState(51);
+				setState(63);
 				match(ID);
 				}
 			}
 
-			setState(54);
+			setState(66);
 			match(LLAVE_A);
-			setState(58);
+			setState(70);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2251799830200526L) != 0)) {
+			while (((((_la - 1)) & ~0x3f) == 0 && ((1L << (_la - 1)) & -9223372032626917273L) != 0)) {
 				{
 				{
-				setState(55);
+				setState(67);
 				miembroClase();
 				}
 				}
-				setState(60);
+				setState(72);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(61);
+			setState(73);
 			match(LLAVE_C);
 			}
 		}
@@ -319,27 +327,27 @@ public class ZetarianoParser extends Parser {
 		MiembroClaseContext _localctx = new MiembroClaseContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_miembroClase);
 		try {
-			setState(66);
+			setState(78);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(63);
+				setState(75);
 				declaracionAtributo();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(64);
+				setState(76);
 				constructor();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(65);
+				setState(77);
 				definicionMetodo();
 				}
 				break;
@@ -387,7 +395,7 @@ public class ZetarianoParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(68);
+			setState(80);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 14L) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -445,9 +453,9 @@ public class ZetarianoParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(70);
+			setState(82);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 2251799830200320L) != 0)) ) {
+			if ( !(((((_la - 27)) & ~0x3f) == 0 && ((1L << (_la - 27)) & 137438953535L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -469,17 +477,89 @@ public class ZetarianoParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class DeclaracionAtributoContext extends ParserRuleContext {
+	public static class TipoEstructuraContext extends ParserRuleContext {
 		public TipoDatoContext tipoDato() {
 			return getRuleContext(TipoDatoContext.class,0);
+		}
+		public List<TerminalNode> CORCHETE_A() { return getTokens(ZetarianoParser.CORCHETE_A); }
+		public TerminalNode CORCHETE_A(int i) {
+			return getToken(ZetarianoParser.CORCHETE_A, i);
+		}
+		public List<TerminalNode> CORCHETE_C() { return getTokens(ZetarianoParser.CORCHETE_C); }
+		public TerminalNode CORCHETE_C(int i) {
+			return getToken(ZetarianoParser.CORCHETE_C, i);
+		}
+		public TipoEstructuraContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_tipoEstructura; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterTipoEstructura(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitTipoEstructura(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitTipoEstructura(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final TipoEstructuraContext tipoEstructura() throws RecognitionException {
+		TipoEstructuraContext _localctx = new TipoEstructuraContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_tipoEstructura);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(84);
+			tipoDato();
+			setState(89);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==CORCHETE_A) {
+				{
+				{
+				setState(85);
+				match(CORCHETE_A);
+				setState(86);
+				match(CORCHETE_C);
+				}
+				}
+				setState(91);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DeclaracionAtributoContext extends ParserRuleContext {
+		public TipoEstructuraContext tipoEstructura() {
+			return getRuleContext(TipoEstructuraContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(ZetarianoParser.ID, 0); }
 		public TerminalNode PUNTOCOMA() { return getToken(ZetarianoParser.PUNTOCOMA, 0); }
 		public ModificadorAccesoContext modificadorAcceso() {
 			return getRuleContext(ModificadorAccesoContext.class,0);
 		}
-		public TerminalNode CORCHETE_A() { return getToken(ZetarianoParser.CORCHETE_A, 0); }
-		public TerminalNode CORCHETE_C() { return getToken(ZetarianoParser.CORCHETE_C, 0); }
+		public TerminalNode IGUAL() { return getToken(ZetarianoParser.IGUAL, 0); }
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
+		}
 		public DeclaracionAtributoContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -501,38 +581,38 @@ public class ZetarianoParser extends Parser {
 
 	public final DeclaracionAtributoContext declaracionAtributo() throws RecognitionException {
 		DeclaracionAtributoContext _localctx = new DeclaracionAtributoContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_declaracionAtributo);
+		enterRule(_localctx, 12, RULE_declaracionAtributo);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(73);
+			setState(93);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14L) != 0)) {
 				{
-				setState(72);
+				setState(92);
 				modificadorAcceso();
 				}
 			}
 
-			setState(75);
-			tipoDato();
-			setState(78);
+			setState(95);
+			tipoEstructura();
+			setState(96);
+			match(ID);
+			setState(99);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (_la==CORCHETE_A) {
+			if (_la==IGUAL) {
 				{
-				setState(76);
-				match(CORCHETE_A);
-				setState(77);
-				match(CORCHETE_C);
+				setState(97);
+				match(IGUAL);
+				setState(98);
+				expresion(0);
 				}
 			}
 
-			setState(80);
-			match(ID);
-			setState(81);
+			setState(101);
 			match(PUNTOCOMA);
 			}
 		}
@@ -582,38 +662,38 @@ public class ZetarianoParser extends Parser {
 
 	public final ConstructorContext constructor() throws RecognitionException {
 		ConstructorContext _localctx = new ConstructorContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_constructor);
+		enterRule(_localctx, 14, RULE_constructor);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(84);
+			setState(104);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14L) != 0)) {
 				{
-				setState(83);
+				setState(103);
 				modificadorAcceso();
 				}
 			}
 
-			setState(86);
+			setState(106);
 			match(ID);
-			setState(87);
+			setState(107);
 			match(PAREN_A);
-			setState(89);
+			setState(109);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2251799830200320L) != 0)) {
+			if (((((_la - 27)) & ~0x3f) == 0 && ((1L << (_la - 27)) & 137438953535L) != 0)) {
 				{
-				setState(88);
+				setState(108);
 				parametros();
 				}
 			}
 
-			setState(91);
+			setState(111);
 			match(PAREN_C);
-			setState(92);
+			setState(112);
 			bloque();
 			}
 		}
@@ -636,8 +716,8 @@ public class ZetarianoParser extends Parser {
 		public BloqueContext bloque() {
 			return getRuleContext(BloqueContext.class,0);
 		}
-		public TipoDatoContext tipoDato() {
-			return getRuleContext(TipoDatoContext.class,0);
+		public TipoEstructuraContext tipoEstructura() {
+			return getRuleContext(TipoEstructuraContext.class,0);
 		}
 		public TerminalNode VOID() { return getToken(ZetarianoParser.VOID, 0); }
 		public TerminalNode OVERRIDE() { return getToken(ZetarianoParser.OVERRIDE, 0); }
@@ -668,32 +748,32 @@ public class ZetarianoParser extends Parser {
 
 	public final DefinicionMetodoContext definicionMetodo() throws RecognitionException {
 		DefinicionMetodoContext _localctx = new DefinicionMetodoContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_definicionMetodo);
+		enterRule(_localctx, 16, RULE_definicionMetodo);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(95);
+			setState(115);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==OVERRIDE) {
 				{
-				setState(94);
+				setState(114);
 				match(OVERRIDE);
 				}
 			}
 
-			setState(98);
+			setState(118);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14L) != 0)) {
 				{
-				setState(97);
+				setState(117);
 				modificadorAcceso();
 				}
 			}
 
-			setState(102);
+			setState(122);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INT:
@@ -704,36 +784,36 @@ public class ZetarianoParser extends Parser {
 			case BOOLEAN:
 			case ID:
 				{
-				setState(100);
-				tipoDato();
+				setState(120);
+				tipoEstructura();
 				}
 				break;
 			case VOID:
 				{
-				setState(101);
+				setState(121);
 				match(VOID);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(104);
+			setState(124);
 			match(ID);
-			setState(105);
+			setState(125);
 			match(PAREN_A);
-			setState(107);
+			setState(127);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2251799830200320L) != 0)) {
+			if (((((_la - 27)) & ~0x3f) == 0 && ((1L << (_la - 27)) & 137438953535L) != 0)) {
 				{
-				setState(106);
+				setState(126);
 				parametros();
 				}
 			}
 
-			setState(109);
+			setState(129);
 			match(PAREN_C);
-			setState(110);
+			setState(130);
 			bloque();
 			}
 		}
@@ -781,26 +861,26 @@ public class ZetarianoParser extends Parser {
 
 	public final ParametrosContext parametros() throws RecognitionException {
 		ParametrosContext _localctx = new ParametrosContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_parametros);
+		enterRule(_localctx, 18, RULE_parametros);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(112);
+			setState(132);
 			parametro();
-			setState(117);
+			setState(137);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMA) {
 				{
 				{
-				setState(113);
+				setState(133);
 				match(COMA);
-				setState(114);
+				setState(134);
 				parametro();
 				}
 				}
-				setState(119);
+				setState(139);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -819,8 +899,8 @@ public class ZetarianoParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ParametroContext extends ParserRuleContext {
-		public TipoDatoContext tipoDato() {
-			return getRuleContext(TipoDatoContext.class,0);
+		public TipoEstructuraContext tipoEstructura() {
+			return getRuleContext(TipoEstructuraContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(ZetarianoParser.ID, 0); }
 		public ParametroContext(ParserRuleContext parent, int invokingState) {
@@ -844,13 +924,13 @@ public class ZetarianoParser extends Parser {
 
 	public final ParametroContext parametro() throws RecognitionException {
 		ParametroContext _localctx = new ParametroContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_parametro);
+		enterRule(_localctx, 20, RULE_parametro);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(120);
-			tipoDato();
-			setState(121);
+			setState(140);
+			tipoEstructura();
+			setState(141);
 			match(ID);
 			}
 		}
@@ -896,28 +976,28 @@ public class ZetarianoParser extends Parser {
 
 	public final BloqueContext bloque() throws RecognitionException {
 		BloqueContext _localctx = new BloqueContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_bloque);
+		enterRule(_localctx, 22, RULE_bloque);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(123);
+			setState(143);
 			match(LLAVE_A);
-			setState(127);
+			setState(147);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2251799897336576L) != 0)) {
+			while (((((_la - 8)) & ~0x3f) == 0 && ((1L << (_la - 8)) & 72057594205238907L) != 0)) {
 				{
 				{
-				setState(124);
+				setState(144);
 				instruccion();
 				}
 				}
-				setState(129);
+				setState(149);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(130);
+			setState(150);
 			match(LLAVE_C);
 			}
 		}
@@ -950,6 +1030,17 @@ public class ZetarianoParser extends Parser {
 		public ForStmtContext forStmt() {
 			return getRuleContext(ForStmtContext.class,0);
 		}
+		public WhileStmtContext whileStmt() {
+			return getRuleContext(WhileStmtContext.class,0);
+		}
+		public DoWhileStmtContext doWhileStmt() {
+			return getRuleContext(DoWhileStmtContext.class,0);
+		}
+		public SwitchStmtContext switchStmt() {
+			return getRuleContext(SwitchStmtContext.class,0);
+		}
+		public TerminalNode BREAK() { return getToken(ZetarianoParser.BREAK, 0); }
+		public TerminalNode CONTINUE() { return getToken(ZetarianoParser.CONTINUE, 0); }
 		public TerminalNode RETURN() { return getToken(ZetarianoParser.RETURN, 0); }
 		public ExpresionContext expresion() {
 			return getRuleContext(ExpresionContext.class,0);
@@ -957,6 +1048,8 @@ public class ZetarianoParser extends Parser {
 		public TerminalNode PRINTLN() { return getToken(ZetarianoParser.PRINTLN, 0); }
 		public TerminalNode PAREN_A() { return getToken(ZetarianoParser.PAREN_A, 0); }
 		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public TerminalNode PRINT() { return getToken(ZetarianoParser.PRINT, 0); }
+		public TerminalNode READLN() { return getToken(ZetarianoParser.READLN, 0); }
 		public InstruccionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -978,82 +1071,149 @@ public class ZetarianoParser extends Parser {
 
 	public final InstruccionContext instruccion() throws RecognitionException {
 		InstruccionContext _localctx = new InstruccionContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_instruccion);
+		enterRule(_localctx, 24, RULE_instruccion);
 		int _la;
 		try {
-			setState(152);
+			setState(189);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(132);
+				setState(152);
 				bloque();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(133);
+				setState(153);
 				declaracionLocal();
-				setState(134);
+				setState(154);
 				match(PUNTOCOMA);
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(136);
+				setState(156);
 				asignacionOMetodo();
-				setState(137);
+				setState(157);
 				match(PUNTOCOMA);
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(139);
+				setState(159);
 				ifStmt();
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(140);
+				setState(160);
 				forStmt();
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(141);
-				match(RETURN);
-				setState(143);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 34902897129140224L) != 0)) {
-					{
-					setState(142);
-					expresion(0);
-					}
-				}
-
-				setState(145);
-				match(PUNTOCOMA);
+				setState(161);
+				whileStmt();
 				}
 				break;
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(146);
+				setState(162);
+				doWhileStmt();
+				}
+				break;
+			case 8:
+				enterOuterAlt(_localctx, 8);
+				{
+				setState(163);
+				switchStmt();
+				}
+				break;
+			case 9:
+				enterOuterAlt(_localctx, 9);
+				{
+				setState(164);
+				match(BREAK);
+				setState(165);
+				match(PUNTOCOMA);
+				}
+				break;
+			case 10:
+				enterOuterAlt(_localctx, 10);
+				{
+				setState(166);
+				match(CONTINUE);
+				setState(167);
+				match(PUNTOCOMA);
+				}
+				break;
+			case 11:
+				enterOuterAlt(_localctx, 11);
+				{
+				setState(168);
+				match(RETURN);
+				setState(170);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
+					{
+					setState(169);
+					expresion(0);
+					}
+				}
+
+				setState(172);
+				match(PUNTOCOMA);
+				}
+				break;
+			case 12:
+				enterOuterAlt(_localctx, 12);
+				{
+				setState(173);
 				match(PRINTLN);
-				setState(147);
+				setState(174);
 				match(PAREN_A);
-				setState(148);
+				setState(175);
 				expresion(0);
-				setState(149);
+				setState(176);
 				match(PAREN_C);
-				setState(150);
+				setState(177);
+				match(PUNTOCOMA);
+				}
+				break;
+			case 13:
+				enterOuterAlt(_localctx, 13);
+				{
+				setState(179);
+				match(PRINT);
+				setState(180);
+				match(PAREN_A);
+				setState(181);
+				expresion(0);
+				setState(182);
+				match(PAREN_C);
+				setState(183);
+				match(PUNTOCOMA);
+				}
+				break;
+			case 14:
+				enterOuterAlt(_localctx, 14);
+				{
+				setState(185);
+				match(READLN);
+				setState(186);
+				match(PAREN_A);
+				setState(187);
+				match(PAREN_C);
+				setState(188);
 				match(PUNTOCOMA);
 				}
 				break;
@@ -1072,8 +1232,8 @@ public class ZetarianoParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class DeclaracionLocalContext extends ParserRuleContext {
-		public TipoDatoContext tipoDato() {
-			return getRuleContext(TipoDatoContext.class,0);
+		public TipoEstructuraContext tipoEstructura() {
+			return getRuleContext(TipoEstructuraContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(ZetarianoParser.ID, 0); }
 		public TerminalNode IGUAL() { return getToken(ZetarianoParser.IGUAL, 0); }
@@ -1101,18 +1261,27 @@ public class ZetarianoParser extends Parser {
 
 	public final DeclaracionLocalContext declaracionLocal() throws RecognitionException {
 		DeclaracionLocalContext _localctx = new DeclaracionLocalContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_declaracionLocal);
+		enterRule(_localctx, 26, RULE_declaracionLocal);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(154);
-			tipoDato();
-			setState(155);
+			setState(191);
+			tipoEstructura();
+			setState(192);
 			match(ID);
-			setState(156);
-			match(IGUAL);
-			setState(157);
-			expresion(0);
+			setState(195);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==IGUAL) {
+				{
+				setState(193);
+				match(IGUAL);
+				setState(194);
+				expresion(0);
+				}
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -1195,6 +1364,7 @@ public class ZetarianoParser extends Parser {
 		public TerminalNode IGUAL() { return getToken(ZetarianoParser.IGUAL, 0); }
 		public TerminalNode MAS_IGUAL() { return getToken(ZetarianoParser.MAS_IGUAL, 0); }
 		public TerminalNode MENOS_IGUAL() { return getToken(ZetarianoParser.MENOS_IGUAL, 0); }
+		public TerminalNode MULT_IGUAL() { return getToken(ZetarianoParser.MULT_IGUAL, 0); }
 		public InstAsignacionContext(AsignacionOMetodoContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -1234,21 +1404,21 @@ public class ZetarianoParser extends Parser {
 
 	public final AsignacionOMetodoContext asignacionOMetodo() throws RecognitionException {
 		AsignacionOMetodoContext _localctx = new AsignacionOMetodoContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_asignacionOMetodo);
+		enterRule(_localctx, 28, RULE_asignacionOMetodo);
 		int _la;
 		try {
-			setState(176);
+			setState(214);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,18,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,20,_ctx) ) {
 			case 1:
 				_localctx = new InstAsignacionContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(159);
+				setState(197);
 				acceso();
-				setState(160);
+				setState(198);
 				_la = _input.LA(1);
-				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 60129542144L) != 0)) ) {
+				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 263882790666240L) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1256,7 +1426,7 @@ public class ZetarianoParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(161);
+				setState(199);
 				expresion(0);
 				}
 				break;
@@ -1264,9 +1434,9 @@ public class ZetarianoParser extends Parser {
 				_localctx = new InstIncrementoContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(163);
+				setState(201);
 				acceso();
-				setState(164);
+				setState(202);
 				match(MAS_MAS);
 				}
 				break;
@@ -1274,9 +1444,9 @@ public class ZetarianoParser extends Parser {
 				_localctx = new InstDecrementoContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(166);
+				setState(204);
 				acceso();
-				setState(167);
+				setState(205);
 				match(MENOS_MENOS);
 				}
 				break;
@@ -1284,21 +1454,21 @@ public class ZetarianoParser extends Parser {
 				_localctx = new InstLlamadaContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(169);
+				setState(207);
 				acceso();
-				setState(170);
+				setState(208);
 				match(PAREN_A);
-				setState(172);
+				setState(210);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 34902897129140224L) != 0)) {
+				if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
 					{
-					setState(171);
+					setState(209);
 					argumentos();
 					}
 				}
 
-				setState(174);
+				setState(212);
 				match(PAREN_C);
 				}
 				break;
@@ -1351,28 +1521,28 @@ public class ZetarianoParser extends Parser {
 
 	public final IfStmtContext ifStmt() throws RecognitionException {
 		IfStmtContext _localctx = new IfStmtContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_ifStmt);
+		enterRule(_localctx, 30, RULE_ifStmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(178);
+			setState(216);
 			match(IF);
-			setState(179);
+			setState(217);
 			match(PAREN_A);
-			setState(180);
+			setState(218);
 			expresion(0);
-			setState(181);
+			setState(219);
 			match(PAREN_C);
-			setState(182);
+			setState(220);
 			instruccion();
-			setState(185);
+			setState(223);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,19,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,21,_ctx) ) {
 			case 1:
 				{
-				setState(183);
+				setState(221);
 				match(ELSE);
-				setState(184);
+				setState(222);
 				instruccion();
 				}
 				break;
@@ -1398,8 +1568,12 @@ public class ZetarianoParser extends Parser {
 		public TerminalNode PUNTOCOMA(int i) {
 			return getToken(ZetarianoParser.PUNTOCOMA, i);
 		}
-		public ExpresionContext expresion() {
-			return getRuleContext(ExpresionContext.class,0);
+		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public InstruccionContext instruccion() {
+			return getRuleContext(InstruccionContext.class,0);
+		}
+		public DeclaracionLocalContext declaracionLocal() {
+			return getRuleContext(DeclaracionLocalContext.class,0);
 		}
 		public List<AsignacionOMetodoContext> asignacionOMetodo() {
 			return getRuleContexts(AsignacionOMetodoContext.class);
@@ -1407,12 +1581,8 @@ public class ZetarianoParser extends Parser {
 		public AsignacionOMetodoContext asignacionOMetodo(int i) {
 			return getRuleContext(AsignacionOMetodoContext.class,i);
 		}
-		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
-		public InstruccionContext instruccion() {
-			return getRuleContext(InstruccionContext.class,0);
-		}
-		public DeclaracionLocalContext declaracionLocal() {
-			return getRuleContext(DeclaracionLocalContext.class,0);
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
 		}
 		public ForStmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1435,42 +1605,416 @@ public class ZetarianoParser extends Parser {
 
 	public final ForStmtContext forStmt() throws RecognitionException {
 		ForStmtContext _localctx = new ForStmtContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_forStmt);
+		enterRule(_localctx, 32, RULE_forStmt);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(187);
+			setState(225);
 			match(FOR);
-			setState(188);
+			setState(226);
 			match(PAREN_A);
-			setState(191);
+			setState(229);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,20,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,22,_ctx) ) {
 			case 1:
 				{
-				setState(189);
+				setState(227);
 				declaracionLocal();
 				}
 				break;
 			case 2:
 				{
-				setState(190);
+				setState(228);
 				asignacionOMetodo();
 				}
 				break;
 			}
-			setState(193);
+			setState(231);
 			match(PUNTOCOMA);
-			setState(194);
-			expresion(0);
-			setState(195);
+			setState(233);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
+				{
+				setState(232);
+				expresion(0);
+				}
+			}
+
+			setState(235);
 			match(PUNTOCOMA);
-			setState(196);
-			asignacionOMetodo();
-			setState(197);
+			setState(237);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==THIS || _la==ID) {
+				{
+				setState(236);
+				asignacionOMetodo();
+				}
+			}
+
+			setState(239);
 			match(PAREN_C);
-			setState(198);
+			setState(240);
 			instruccion();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class WhileStmtContext extends ParserRuleContext {
+		public TerminalNode WHILE() { return getToken(ZetarianoParser.WHILE, 0); }
+		public TerminalNode PAREN_A() { return getToken(ZetarianoParser.PAREN_A, 0); }
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
+		}
+		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public InstruccionContext instruccion() {
+			return getRuleContext(InstruccionContext.class,0);
+		}
+		public WhileStmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_whileStmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterWhileStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitWhileStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitWhileStmt(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final WhileStmtContext whileStmt() throws RecognitionException {
+		WhileStmtContext _localctx = new WhileStmtContext(_ctx, getState());
+		enterRule(_localctx, 34, RULE_whileStmt);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(242);
+			match(WHILE);
+			setState(243);
+			match(PAREN_A);
+			setState(244);
+			expresion(0);
+			setState(245);
+			match(PAREN_C);
+			setState(246);
+			instruccion();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DoWhileStmtContext extends ParserRuleContext {
+		public TerminalNode DO() { return getToken(ZetarianoParser.DO, 0); }
+		public InstruccionContext instruccion() {
+			return getRuleContext(InstruccionContext.class,0);
+		}
+		public TerminalNode WHILE() { return getToken(ZetarianoParser.WHILE, 0); }
+		public TerminalNode PAREN_A() { return getToken(ZetarianoParser.PAREN_A, 0); }
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
+		}
+		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public TerminalNode PUNTOCOMA() { return getToken(ZetarianoParser.PUNTOCOMA, 0); }
+		public DoWhileStmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_doWhileStmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterDoWhileStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitDoWhileStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitDoWhileStmt(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final DoWhileStmtContext doWhileStmt() throws RecognitionException {
+		DoWhileStmtContext _localctx = new DoWhileStmtContext(_ctx, getState());
+		enterRule(_localctx, 36, RULE_doWhileStmt);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(248);
+			match(DO);
+			setState(249);
+			instruccion();
+			setState(250);
+			match(WHILE);
+			setState(251);
+			match(PAREN_A);
+			setState(252);
+			expresion(0);
+			setState(253);
+			match(PAREN_C);
+			setState(254);
+			match(PUNTOCOMA);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class SwitchStmtContext extends ParserRuleContext {
+		public TerminalNode SWITCH() { return getToken(ZetarianoParser.SWITCH, 0); }
+		public TerminalNode PAREN_A() { return getToken(ZetarianoParser.PAREN_A, 0); }
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
+		}
+		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public TerminalNode LLAVE_A() { return getToken(ZetarianoParser.LLAVE_A, 0); }
+		public TerminalNode LLAVE_C() { return getToken(ZetarianoParser.LLAVE_C, 0); }
+		public List<CaseCodeContext> caseCode() {
+			return getRuleContexts(CaseCodeContext.class);
+		}
+		public CaseCodeContext caseCode(int i) {
+			return getRuleContext(CaseCodeContext.class,i);
+		}
+		public DefaultCodeContext defaultCode() {
+			return getRuleContext(DefaultCodeContext.class,0);
+		}
+		public SwitchStmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_switchStmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterSwitchStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitSwitchStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitSwitchStmt(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final SwitchStmtContext switchStmt() throws RecognitionException {
+		SwitchStmtContext _localctx = new SwitchStmtContext(_ctx, getState());
+		enterRule(_localctx, 38, RULE_switchStmt);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(256);
+			match(SWITCH);
+			setState(257);
+			match(PAREN_A);
+			setState(258);
+			expresion(0);
+			setState(259);
+			match(PAREN_C);
+			setState(260);
+			match(LLAVE_A);
+			setState(264);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==CASE) {
+				{
+				{
+				setState(261);
+				caseCode();
+				}
+				}
+				setState(266);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(268);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			if (_la==DEFAULT) {
+				{
+				setState(267);
+				defaultCode();
+				}
+			}
+
+			setState(270);
+			match(LLAVE_C);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class CaseCodeContext extends ParserRuleContext {
+		public TerminalNode CASE() { return getToken(ZetarianoParser.CASE, 0); }
+		public ExpresionContext expresion() {
+			return getRuleContext(ExpresionContext.class,0);
+		}
+		public TerminalNode DOS_PUNTOS() { return getToken(ZetarianoParser.DOS_PUNTOS, 0); }
+		public List<InstruccionContext> instruccion() {
+			return getRuleContexts(InstruccionContext.class);
+		}
+		public InstruccionContext instruccion(int i) {
+			return getRuleContext(InstruccionContext.class,i);
+		}
+		public CaseCodeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_caseCode; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterCaseCode(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitCaseCode(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitCaseCode(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final CaseCodeContext caseCode() throws RecognitionException {
+		CaseCodeContext _localctx = new CaseCodeContext(_ctx, getState());
+		enterRule(_localctx, 40, RULE_caseCode);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(272);
+			match(CASE);
+			setState(273);
+			expresion(0);
+			setState(274);
+			match(DOS_PUNTOS);
+			setState(278);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (((((_la - 8)) & ~0x3f) == 0 && ((1L << (_la - 8)) & 72057594205238907L) != 0)) {
+				{
+				{
+				setState(275);
+				instruccion();
+				}
+				}
+				setState(280);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DefaultCodeContext extends ParserRuleContext {
+		public TerminalNode DEFAULT() { return getToken(ZetarianoParser.DEFAULT, 0); }
+		public TerminalNode DOS_PUNTOS() { return getToken(ZetarianoParser.DOS_PUNTOS, 0); }
+		public List<InstruccionContext> instruccion() {
+			return getRuleContexts(InstruccionContext.class);
+		}
+		public InstruccionContext instruccion(int i) {
+			return getRuleContext(InstruccionContext.class,i);
+		}
+		public DefaultCodeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_defaultCode; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterDefaultCode(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitDefaultCode(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitDefaultCode(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final DefaultCodeContext defaultCode() throws RecognitionException {
+		DefaultCodeContext _localctx = new DefaultCodeContext(_ctx, getState());
+		enterRule(_localctx, 42, RULE_defaultCode);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(281);
+			match(DEFAULT);
+			setState(282);
+			match(DOS_PUNTOS);
+			setState(286);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (((((_la - 8)) & ~0x3f) == 0 && ((1L << (_la - 8)) & 72057594205238907L) != 0)) {
+				{
+				{
+				setState(283);
+				instruccion();
+				}
+				}
+				setState(288);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -1517,26 +2061,26 @@ public class ZetarianoParser extends Parser {
 
 	public final ArgumentosContext argumentos() throws RecognitionException {
 		ArgumentosContext _localctx = new ArgumentosContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_argumentos);
+		enterRule(_localctx, 44, RULE_argumentos);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(200);
+			setState(289);
 			expresion(0);
-			setState(205);
+			setState(294);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMA) {
 				{
 				{
-				setState(201);
+				setState(290);
 				match(COMA);
-				setState(202);
+				setState(291);
 				expresion(0);
 				}
 				}
-				setState(207);
+				setState(296);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1599,83 +2143,83 @@ public class ZetarianoParser extends Parser {
 
 	public final AccesoContext acceso() throws RecognitionException {
 		AccesoContext _localctx = new AccesoContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_acceso);
+		enterRule(_localctx, 46, RULE_acceso);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(210);
+			setState(299);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==THIS) {
 				{
-				setState(208);
+				setState(297);
 				match(THIS);
-				setState(209);
+				setState(298);
 				match(PUNTO);
 				}
 			}
 
-			setState(212);
+			setState(301);
 			match(ID);
-			setState(219);
+			setState(308);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,23,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(213);
+					setState(302);
 					match(CORCHETE_A);
-					setState(214);
+					setState(303);
 					expresion(0);
-					setState(215);
+					setState(304);
 					match(CORCHETE_C);
 					}
 					} 
 				}
-				setState(221);
+				setState(310);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,23,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
 			}
-			setState(235);
+			setState(324);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,33,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(222);
+					setState(311);
 					match(PUNTO);
-					setState(223);
+					setState(312);
 					match(ID);
-					setState(230);
+					setState(319);
 					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input,24,_ctx);
+					_alt = getInterpreter().adaptivePredict(_input,32,_ctx);
 					while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 						if ( _alt==1 ) {
 							{
 							{
-							setState(224);
+							setState(313);
 							match(CORCHETE_A);
-							setState(225);
+							setState(314);
 							expresion(0);
-							setState(226);
+							setState(315);
 							match(CORCHETE_C);
 							}
 							} 
 						}
-						setState(232);
+						setState(321);
 						_errHandler.sync(this);
-						_alt = getInterpreter().adaptivePredict(_input,24,_ctx);
+						_alt = getInterpreter().adaptivePredict(_input,32,_ctx);
 					}
 					}
 					} 
 				}
-				setState(237);
+				setState(326);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,33,_ctx);
 			}
 			}
 		}
@@ -1721,6 +2265,35 @@ public class ZetarianoParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprAgrupacion(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class ExprArregloLiteralContext extends ExpresionContext {
+		public TerminalNode LLAVE_A() { return getToken(ZetarianoParser.LLAVE_A, 0); }
+		public TerminalNode LLAVE_C() { return getToken(ZetarianoParser.LLAVE_C, 0); }
+		public List<ExpresionContext> expresion() {
+			return getRuleContexts(ExpresionContext.class);
+		}
+		public ExpresionContext expresion(int i) {
+			return getRuleContext(ExpresionContext.class,i);
+		}
+		public List<TerminalNode> COMA() { return getTokens(ZetarianoParser.COMA); }
+		public TerminalNode COMA(int i) {
+			return getToken(ZetarianoParser.COMA, i);
+		}
+		public ExprArregloLiteralContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprArregloLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprArregloLiteral(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprArregloLiteral(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1849,6 +2422,24 @@ public class ZetarianoParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
+	public static class ExprCaracterContext extends ExpresionContext {
+		public TerminalNode CARACTER_LITERAL() { return getToken(ZetarianoParser.CARACTER_LITERAL, 0); }
+		public ExprCaracterContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprCaracter(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprCaracter(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprCaracter(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
 	public static class ExprTrueContext extends ExpresionContext {
 		public TerminalNode TRUE() { return getToken(ZetarianoParser.TRUE, 0); }
 		public ExprTrueContext(ExpresionContext ctx) { copyFrom(ctx); }
@@ -1937,6 +2528,32 @@ public class ZetarianoParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
+	public static class ExprMultDivModContext extends ExpresionContext {
+		public List<ExpresionContext> expresion() {
+			return getRuleContexts(ExpresionContext.class);
+		}
+		public ExpresionContext expresion(int i) {
+			return getRuleContext(ExpresionContext.class,i);
+		}
+		public TerminalNode MULT() { return getToken(ZetarianoParser.MULT, 0); }
+		public TerminalNode DIV() { return getToken(ZetarianoParser.DIV, 0); }
+		public TerminalNode MODULO() { return getToken(ZetarianoParser.MODULO, 0); }
+		public ExprMultDivModContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprMultDivMod(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprMultDivMod(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprMultDivMod(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
 	public static class ExprSumaRestaContext extends ExpresionContext {
 		public List<ExpresionContext> expresion() {
 			return getRuleContexts(ExpresionContext.class);
@@ -1991,11 +2608,20 @@ public class ZetarianoParser extends Parser {
 		public TipoDatoContext tipoDato() {
 			return getRuleContext(TipoDatoContext.class,0);
 		}
-		public TerminalNode CORCHETE_A() { return getToken(ZetarianoParser.CORCHETE_A, 0); }
-		public ExpresionContext expresion() {
-			return getRuleContext(ExpresionContext.class,0);
+		public List<TerminalNode> CORCHETE_A() { return getTokens(ZetarianoParser.CORCHETE_A); }
+		public TerminalNode CORCHETE_A(int i) {
+			return getToken(ZetarianoParser.CORCHETE_A, i);
 		}
-		public TerminalNode CORCHETE_C() { return getToken(ZetarianoParser.CORCHETE_C, 0); }
+		public List<ExpresionContext> expresion() {
+			return getRuleContexts(ExpresionContext.class);
+		}
+		public ExpresionContext expresion(int i) {
+			return getRuleContext(ExpresionContext.class,i);
+		}
+		public List<TerminalNode> CORCHETE_C() { return getTokens(ZetarianoParser.CORCHETE_C); }
+		public TerminalNode CORCHETE_C(int i) {
+			return getToken(ZetarianoParser.CORCHETE_C, i);
+		}
 		public ExprInstanciaArregloContext(ExpresionContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -2008,6 +2634,31 @@ public class ZetarianoParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprInstanciaArreglo(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class ExprTernarioContext extends ExpresionContext {
+		public List<ExpresionContext> expresion() {
+			return getRuleContexts(ExpresionContext.class);
+		}
+		public ExpresionContext expresion(int i) {
+			return getRuleContext(ExpresionContext.class,i);
+		}
+		public TerminalNode INTERROGACION() { return getToken(ZetarianoParser.INTERROGACION, 0); }
+		public TerminalNode DOS_PUNTOS() { return getToken(ZetarianoParser.DOS_PUNTOS, 0); }
+		public ExprTernarioContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprTernario(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprTernario(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprTernario(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -2036,31 +2687,6 @@ public class ZetarianoParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprMultDivContext extends ExpresionContext {
-		public List<ExpresionContext> expresion() {
-			return getRuleContexts(ExpresionContext.class);
-		}
-		public ExpresionContext expresion(int i) {
-			return getRuleContext(ExpresionContext.class,i);
-		}
-		public TerminalNode MULT() { return getToken(ZetarianoParser.MULT, 0); }
-		public TerminalNode DIV() { return getToken(ZetarianoParser.DIV, 0); }
-		public ExprMultDivContext(ExpresionContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprMultDiv(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprMultDiv(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprMultDiv(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
 	public static class ExprNullContext extends ExpresionContext {
 		public TerminalNode NULL_LITERAL() { return getToken(ZetarianoParser.NULL_LITERAL, 0); }
 		public ExprNullContext(ExpresionContext ctx) { copyFrom(ctx); }
@@ -2078,6 +2704,26 @@ public class ZetarianoParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class ExprReadlnContext extends ExpresionContext {
+		public TerminalNode READLN() { return getToken(ZetarianoParser.READLN, 0); }
+		public TerminalNode PAREN_A() { return getToken(ZetarianoParser.PAREN_A, 0); }
+		public TerminalNode PAREN_C() { return getToken(ZetarianoParser.PAREN_C, 0); }
+		public ExprReadlnContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).enterExprReadln(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ZetarianoListener ) ((ZetarianoListener)listener).exitExprReadln(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ZetarianoVisitor ) return ((ZetarianoVisitor<? extends T>)visitor).visitExprReadln(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 
 	public final ExpresionContext expresion() throws RecognitionException {
 		return expresion(0);
@@ -2088,27 +2734,27 @@ public class ZetarianoParser extends Parser {
 		int _parentState = getState();
 		ExpresionContext _localctx = new ExpresionContext(_ctx, _parentState);
 		ExpresionContext _prevctx = _localctx;
-		int _startState = 36;
-		enterRecursionRule(_localctx, 36, RULE_expresion, _p);
+		int _startState = 48;
+		enterRecursionRule(_localctx, 48, RULE_expresion, _p);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(272);
+			setState(388);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,29,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,41,_ctx) ) {
 			case 1:
 				{
 				_localctx = new ExprAgrupacionContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(239);
+				setState(328);
 				match(PAREN_A);
-				setState(240);
+				setState(329);
 				expresion(0);
-				setState(241);
+				setState(330);
 				match(PAREN_C);
 				}
 				break;
@@ -2117,16 +2763,52 @@ public class ZetarianoParser extends Parser {
 				_localctx = new ExprInstanciaArregloContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(243);
+				setState(332);
 				match(NEW);
-				setState(244);
+				setState(333);
 				tipoDato();
-				setState(245);
-				match(CORCHETE_A);
-				setState(246);
-				expresion(0);
-				setState(247);
-				match(CORCHETE_C);
+				setState(338); 
+				_errHandler.sync(this);
+				_alt = 1;
+				do {
+					switch (_alt) {
+					case 1:
+						{
+						{
+						setState(334);
+						match(CORCHETE_A);
+						setState(335);
+						expresion(0);
+						setState(336);
+						match(CORCHETE_C);
+						}
+						}
+						break;
+					default:
+						throw new NoViableAltException(this);
+					}
+					setState(340); 
+					_errHandler.sync(this);
+					_alt = getInterpreter().adaptivePredict(_input,34,_ctx);
+				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
+				setState(346);
+				_errHandler.sync(this);
+				_alt = getInterpreter().adaptivePredict(_input,35,_ctx);
+				while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+					if ( _alt==1 ) {
+						{
+						{
+						setState(342);
+						match(CORCHETE_A);
+						setState(343);
+						match(CORCHETE_C);
+						}
+						} 
+					}
+					setState(348);
+					_errHandler.sync(this);
+					_alt = getInterpreter().adaptivePredict(_input,35,_ctx);
+				}
 				}
 				break;
 			case 3:
@@ -2134,144 +2816,203 @@ public class ZetarianoParser extends Parser {
 				_localctx = new ExprInstanciaObjetoContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(249);
+				setState(349);
 				match(NEW);
-				setState(250);
+				setState(350);
 				match(ID);
-				setState(251);
+				setState(351);
 				match(PAREN_A);
-				setState(253);
+				setState(353);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 34902897129140224L) != 0)) {
+				if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
 					{
-					setState(252);
+					setState(352);
 					argumentos();
 					}
 				}
 
-				setState(255);
+				setState(355);
 				match(PAREN_C);
 				}
 				break;
 			case 4:
 				{
-				_localctx = new ExprNotContext(_localctx);
+				_localctx = new ExprArregloLiteralContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(256);
-				match(NOT);
-				setState(257);
-				expresion(14);
+				setState(356);
+				match(LLAVE_A);
+				setState(365);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
+					{
+					setState(357);
+					expresion(0);
+					setState(362);
+					_errHandler.sync(this);
+					_la = _input.LA(1);
+					while (_la==COMA) {
+						{
+						{
+						setState(358);
+						match(COMA);
+						setState(359);
+						expresion(0);
+						}
+						}
+						setState(364);
+						_errHandler.sync(this);
+						_la = _input.LA(1);
+					}
+					}
+				}
+
+				setState(367);
+				match(LLAVE_C);
 				}
 				break;
 			case 5:
 				{
+				_localctx = new ExprReadlnContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(368);
+				match(READLN);
+				setState(369);
+				match(PAREN_A);
+				setState(370);
+				match(PAREN_C);
+				}
+				break;
+			case 6:
+				{
+				_localctx = new ExprNotContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(371);
+				match(NOT);
+				setState(372);
+				expresion(16);
+				}
+				break;
+			case 7:
+				{
 				_localctx = new ExprAccesoOlamadaContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(258);
+				setState(373);
 				acceso();
-				setState(264);
+				setState(379);
 				_errHandler.sync(this);
-				switch ( getInterpreter().adaptivePredict(_input,28,_ctx) ) {
+				switch ( getInterpreter().adaptivePredict(_input,40,_ctx) ) {
 				case 1:
 					{
-					setState(259);
+					setState(374);
 					match(PAREN_A);
-					setState(261);
+					setState(376);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 34902897129140224L) != 0)) {
+					if (((((_la - 19)) & ~0x3f) == 0 && ((1L << (_la - 19)) & 1108307720880371L) != 0)) {
 						{
-						setState(260);
+						setState(375);
 						argumentos();
 						}
 					}
 
-					setState(263);
+					setState(378);
 					match(PAREN_C);
 					}
 					break;
 				}
 				}
 				break;
-			case 6:
+			case 8:
 				{
 				_localctx = new ExprEnteroContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(266);
+				setState(381);
 				match(ENTERO_LITERAL);
-				}
-				break;
-			case 7:
-				{
-				_localctx = new ExprDoubleContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
-				setState(267);
-				match(DOUBLE_LITERAL);
-				}
-				break;
-			case 8:
-				{
-				_localctx = new ExprCadenaContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
-				setState(268);
-				match(CADENA);
 				}
 				break;
 			case 9:
 				{
-				_localctx = new ExprTrueContext(_localctx);
+				_localctx = new ExprDoubleContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(269);
-				match(TRUE);
+				setState(382);
+				match(DOUBLE_LITERAL);
 				}
 				break;
 			case 10:
 				{
-				_localctx = new ExprFalseContext(_localctx);
+				_localctx = new ExprCadenaContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(270);
-				match(FALSE);
+				setState(383);
+				match(CADENA);
 				}
 				break;
 			case 11:
 				{
+				_localctx = new ExprCaracterContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(384);
+				match(CARACTER_LITERAL);
+				}
+				break;
+			case 12:
+				{
+				_localctx = new ExprTrueContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(385);
+				match(TRUE);
+				}
+				break;
+			case 13:
+				{
+				_localctx = new ExprFalseContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(386);
+				match(FALSE);
+				}
+				break;
+			case 14:
+				{
 				_localctx = new ExprNullContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(271);
+				setState(387);
 				match(NULL_LITERAL);
 				}
 				break;
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(294);
+			setState(416);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(292);
+					setState(414);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,30,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,42,_ctx) ) {
 					case 1:
 						{
-						_localctx = new ExprMultDivContext(new ExpresionContext(_parentctx, _parentState));
+						_localctx = new ExprMultDivModContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(274);
-						if (!(precpred(_ctx, 13))) throw new FailedPredicateException(this, "precpred(_ctx, 13)");
-						setState(275);
+						setState(390);
+						if (!(precpred(_ctx, 15))) throw new FailedPredicateException(this, "precpred(_ctx, 15)");
+						setState(391);
 						_la = _input.LA(1);
-						if ( !(_la==MULT || _la==DIV) ) {
+						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 31525197391593472L) != 0)) ) {
 						_errHandler.recoverInline(this);
 						}
 						else {
@@ -2279,17 +3020,17 @@ public class ZetarianoParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(276);
-						expresion(14);
+						setState(392);
+						expresion(16);
 						}
 						break;
 					case 2:
 						{
 						_localctx = new ExprSumaRestaContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(277);
-						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
-						setState(278);
+						setState(393);
+						if (!(precpred(_ctx, 14))) throw new FailedPredicateException(this, "precpred(_ctx, 14)");
+						setState(394);
 						_la = _input.LA(1);
 						if ( !(_la==MAS || _la==MENOS) ) {
 						_errHandler.recoverInline(this);
@@ -2299,19 +3040,19 @@ public class ZetarianoParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(279);
-						expresion(13);
+						setState(395);
+						expresion(15);
 						}
 						break;
 					case 3:
 						{
 						_localctx = new ExprRelacionalContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(280);
-						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
-						setState(281);
+						setState(396);
+						if (!(precpred(_ctx, 13))) throw new FailedPredicateException(this, "precpred(_ctx, 13)");
+						setState(397);
 						_la = _input.LA(1);
-						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 65970697666560L) != 0)) ) {
+						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 540431955284459520L) != 0)) ) {
 						_errHandler.recoverInline(this);
 						}
 						else {
@@ -2319,17 +3060,17 @@ public class ZetarianoParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(282);
-						expresion(12);
+						setState(398);
+						expresion(14);
 						}
 						break;
 					case 4:
 						{
 						_localctx = new ExprIgualdadContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(283);
-						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
-						setState(284);
+						setState(399);
+						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
+						setState(400);
 						_la = _input.LA(1);
 						if ( !(_la==IGUAL_IGUAL || _la==NOT_IGUAL) ) {
 						_errHandler.recoverInline(this);
@@ -2339,40 +3080,56 @@ public class ZetarianoParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(285);
-						expresion(11);
+						setState(401);
+						expresion(13);
 						}
 						break;
 					case 5:
 						{
 						_localctx = new ExprAndContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(286);
-						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
-						setState(287);
+						setState(402);
+						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
+						setState(403);
 						match(AND);
-						setState(288);
-						expresion(10);
+						setState(404);
+						expresion(12);
 						}
 						break;
 					case 6:
 						{
 						_localctx = new ExprOrContext(new ExpresionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
-						setState(289);
-						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
-						setState(290);
+						setState(405);
+						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
+						setState(406);
 						match(OR);
-						setState(291);
+						setState(407);
+						expresion(11);
+						}
+						break;
+					case 7:
+						{
+						_localctx = new ExprTernarioContext(new ExpresionContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_expresion);
+						setState(408);
+						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
+						setState(409);
+						match(INTERROGACION);
+						setState(410);
+						expresion(0);
+						setState(411);
+						match(DOS_PUNTOS);
+						setState(412);
 						expresion(9);
 						}
 						break;
 					}
 					} 
 				}
-				setState(296);
+				setState(418);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
 			}
 			}
 		}
@@ -2389,7 +3146,7 @@ public class ZetarianoParser extends Parser {
 
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 18:
+		case 24:
 			return expresion_sempred((ExpresionContext)_localctx, predIndex);
 		}
 		return true;
@@ -2397,219 +3154,306 @@ public class ZetarianoParser extends Parser {
 	private boolean expresion_sempred(ExpresionContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 13);
+			return precpred(_ctx, 15);
 		case 1:
-			return precpred(_ctx, 12);
+			return precpred(_ctx, 14);
 		case 2:
-			return precpred(_ctx, 11);
+			return precpred(_ctx, 13);
 		case 3:
-			return precpred(_ctx, 10);
+			return precpred(_ctx, 12);
 		case 4:
-			return precpred(_ctx, 9);
+			return precpred(_ctx, 11);
 		case 5:
-			return precpred(_ctx, 8);
+			return precpred(_ctx, 10);
+		case 6:
+			return precpred(_ctx, 9);
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u00019\u012a\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001G\u01a4\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
 		"\f\u0007\f\u0002\r\u0007\r\u0002\u000e\u0007\u000e\u0002\u000f\u0007\u000f"+
 		"\u0002\u0010\u0007\u0010\u0002\u0011\u0007\u0011\u0002\u0012\u0007\u0012"+
-		"\u0001\u0000\u0004\u0000(\b\u0000\u000b\u0000\f\u0000)\u0001\u0000\u0001"+
-		"\u0000\u0001\u0001\u0003\u0001/\b\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0003\u00015\b\u0001\u0001\u0001\u0001\u0001\u0005"+
-		"\u00019\b\u0001\n\u0001\f\u0001<\t\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0002\u0001\u0002\u0001\u0002\u0003\u0002C\b\u0002\u0001\u0003\u0001"+
-		"\u0003\u0001\u0004\u0001\u0004\u0001\u0005\u0003\u0005J\b\u0005\u0001"+
-		"\u0005\u0001\u0005\u0001\u0005\u0003\u0005O\b\u0005\u0001\u0005\u0001"+
-		"\u0005\u0001\u0005\u0001\u0006\u0003\u0006U\b\u0006\u0001\u0006\u0001"+
-		"\u0006\u0001\u0006\u0003\u0006Z\b\u0006\u0001\u0006\u0001\u0006\u0001"+
-		"\u0006\u0001\u0007\u0003\u0007`\b\u0007\u0001\u0007\u0003\u0007c\b\u0007"+
-		"\u0001\u0007\u0001\u0007\u0003\u0007g\b\u0007\u0001\u0007\u0001\u0007"+
-		"\u0001\u0007\u0003\u0007l\b\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
-		"\u0001\b\u0001\b\u0001\b\u0005\bt\b\b\n\b\f\bw\t\b\u0001\t\u0001\t\u0001"+
-		"\t\u0001\n\u0001\n\u0005\n~\b\n\n\n\f\n\u0081\t\n\u0001\n\u0001\n\u0001"+
-		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
-		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0003\u000b\u0090"+
-		"\b\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001"+
-		"\u000b\u0001\u000b\u0003\u000b\u0099\b\u000b\u0001\f\u0001\f\u0001\f\u0001"+
-		"\f\u0001\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
-		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u00ad\b\r\u0001\r\u0001"+
-		"\r\u0003\r\u00b1\b\r\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001"+
-		"\u000e\u0001\u000e\u0001\u000e\u0003\u000e\u00ba\b\u000e\u0001\u000f\u0001"+
-		"\u000f\u0001\u000f\u0001\u000f\u0003\u000f\u00c0\b\u000f\u0001\u000f\u0001"+
-		"\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001"+
-		"\u0010\u0001\u0010\u0001\u0010\u0005\u0010\u00cc\b\u0010\n\u0010\f\u0010"+
-		"\u00cf\t\u0010\u0001\u0011\u0001\u0011\u0003\u0011\u00d3\b\u0011\u0001"+
-		"\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0005\u0011\u00da"+
-		"\b\u0011\n\u0011\f\u0011\u00dd\t\u0011\u0001\u0011\u0001\u0011\u0001\u0011"+
-		"\u0001\u0011\u0001\u0011\u0001\u0011\u0005\u0011\u00e5\b\u0011\n\u0011"+
-		"\f\u0011\u00e8\t\u0011\u0005\u0011\u00ea\b\u0011\n\u0011\f\u0011\u00ed"+
-		"\t\u0011\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003\u0012\u00fe\b\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003"+
-		"\u0012\u0106\b\u0012\u0001\u0012\u0003\u0012\u0109\b\u0012\u0001\u0012"+
-		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003\u0012"+
-		"\u0111\b\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012"+
-		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012"+
-		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012"+
-		"\u0001\u0012\u0005\u0012\u0125\b\u0012\n\u0012\f\u0012\u0128\t\u0012\u0001"+
-		"\u0012\u0000\u0001$\u0013\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012"+
-		"\u0014\u0016\u0018\u001a\u001c\u001e \"$\u0000\u0007\u0001\u0000\u0001"+
-		"\u0003\u0002\u0000\u0012\u001733\u0001\u0000!#\u0001\u0000()\u0001\u0000"+
-		"&\'\u0001\u0000*-\u0001\u0000./\u014c\u0000\'\u0001\u0000\u0000\u0000"+
-		"\u0002.\u0001\u0000\u0000\u0000\u0004B\u0001\u0000\u0000\u0000\u0006D"+
-		"\u0001\u0000\u0000\u0000\bF\u0001\u0000\u0000\u0000\nI\u0001\u0000\u0000"+
-		"\u0000\fT\u0001\u0000\u0000\u0000\u000e_\u0001\u0000\u0000\u0000\u0010"+
-		"p\u0001\u0000\u0000\u0000\u0012x\u0001\u0000\u0000\u0000\u0014{\u0001"+
-		"\u0000\u0000\u0000\u0016\u0098\u0001\u0000\u0000\u0000\u0018\u009a\u0001"+
-		"\u0000\u0000\u0000\u001a\u00b0\u0001\u0000\u0000\u0000\u001c\u00b2\u0001"+
-		"\u0000\u0000\u0000\u001e\u00bb\u0001\u0000\u0000\u0000 \u00c8\u0001\u0000"+
-		"\u0000\u0000\"\u00d2\u0001\u0000\u0000\u0000$\u0110\u0001\u0000\u0000"+
-		"\u0000&(\u0003\u0002\u0001\u0000\'&\u0001\u0000\u0000\u0000()\u0001\u0000"+
-		"\u0000\u0000)\'\u0001\u0000\u0000\u0000)*\u0001\u0000\u0000\u0000*+\u0001"+
-		"\u0000\u0000\u0000+,\u0005\u0000\u0000\u0001,\u0001\u0001\u0000\u0000"+
-		"\u0000-/\u0003\u0006\u0003\u0000.-\u0001\u0000\u0000\u0000./\u0001\u0000"+
-		"\u0000\u0000/0\u0001\u0000\u0000\u000001\u0005\u0004\u0000\u000014\u0005"+
-		"3\u0000\u000023\u0005\u0005\u0000\u000035\u00053\u0000\u000042\u0001\u0000"+
-		"\u0000\u000045\u0001\u0000\u0000\u000056\u0001\u0000\u0000\u00006:\u0005"+
-		"\u001a\u0000\u000079\u0003\u0004\u0002\u000087\u0001\u0000\u0000\u0000"+
-		"9<\u0001\u0000\u0000\u0000:8\u0001\u0000\u0000\u0000:;\u0001\u0000\u0000"+
-		"\u0000;=\u0001\u0000\u0000\u0000<:\u0001\u0000\u0000\u0000=>\u0005\u001b"+
-		"\u0000\u0000>\u0003\u0001\u0000\u0000\u0000?C\u0003\n\u0005\u0000@C\u0003"+
-		"\f\u0006\u0000AC\u0003\u000e\u0007\u0000B?\u0001\u0000\u0000\u0000B@\u0001"+
-		"\u0000\u0000\u0000BA\u0001\u0000\u0000\u0000C\u0005\u0001\u0000\u0000"+
-		"\u0000DE\u0007\u0000\u0000\u0000E\u0007\u0001\u0000\u0000\u0000FG\u0007"+
-		"\u0001\u0000\u0000G\t\u0001\u0000\u0000\u0000HJ\u0003\u0006\u0003\u0000"+
-		"IH\u0001\u0000\u0000\u0000IJ\u0001\u0000\u0000\u0000JK\u0001\u0000\u0000"+
-		"\u0000KN\u0003\b\u0004\u0000LM\u0005\u001c\u0000\u0000MO\u0005\u001d\u0000"+
-		"\u0000NL\u0001\u0000\u0000\u0000NO\u0001\u0000\u0000\u0000OP\u0001\u0000"+
-		"\u0000\u0000PQ\u00053\u0000\u0000QR\u0005\u001e\u0000\u0000R\u000b\u0001"+
-		"\u0000\u0000\u0000SU\u0003\u0006\u0003\u0000TS\u0001\u0000\u0000\u0000"+
-		"TU\u0001\u0000\u0000\u0000UV\u0001\u0000\u0000\u0000VW\u00053\u0000\u0000"+
-		"WY\u0005\u0018\u0000\u0000XZ\u0003\u0010\b\u0000YX\u0001\u0000\u0000\u0000"+
-		"YZ\u0001\u0000\u0000\u0000Z[\u0001\u0000\u0000\u0000[\\\u0005\u0019\u0000"+
-		"\u0000\\]\u0003\u0014\n\u0000]\r\u0001\u0000\u0000\u0000^`\u0005\u0006"+
-		"\u0000\u0000_^\u0001\u0000\u0000\u0000_`\u0001\u0000\u0000\u0000`b\u0001"+
-		"\u0000\u0000\u0000ac\u0003\u0006\u0003\u0000ba\u0001\u0000\u0000\u0000"+
-		"bc\u0001\u0000\u0000\u0000cf\u0001\u0000\u0000\u0000dg\u0003\b\u0004\u0000"+
-		"eg\u0005\u0007\u0000\u0000fd\u0001\u0000\u0000\u0000fe\u0001\u0000\u0000"+
-		"\u0000gh\u0001\u0000\u0000\u0000hi\u00053\u0000\u0000ik\u0005\u0018\u0000"+
-		"\u0000jl\u0003\u0010\b\u0000kj\u0001\u0000\u0000\u0000kl\u0001\u0000\u0000"+
-		"\u0000lm\u0001\u0000\u0000\u0000mn\u0005\u0019\u0000\u0000no\u0003\u0014"+
-		"\n\u0000o\u000f\u0001\u0000\u0000\u0000pu\u0003\u0012\t\u0000qr\u0005"+
-		" \u0000\u0000rt\u0003\u0012\t\u0000sq\u0001\u0000\u0000\u0000tw\u0001"+
-		"\u0000\u0000\u0000us\u0001\u0000\u0000\u0000uv\u0001\u0000\u0000\u0000"+
-		"v\u0011\u0001\u0000\u0000\u0000wu\u0001\u0000\u0000\u0000xy\u0003\b\u0004"+
-		"\u0000yz\u00053\u0000\u0000z\u0013\u0001\u0000\u0000\u0000{\u007f\u0005"+
-		"\u001a\u0000\u0000|~\u0003\u0016\u000b\u0000}|\u0001\u0000\u0000\u0000"+
-		"~\u0081\u0001\u0000\u0000\u0000\u007f}\u0001\u0000\u0000\u0000\u007f\u0080"+
-		"\u0001\u0000\u0000\u0000\u0080\u0082\u0001\u0000\u0000\u0000\u0081\u007f"+
-		"\u0001\u0000\u0000\u0000\u0082\u0083\u0005\u001b\u0000\u0000\u0083\u0015"+
-		"\u0001\u0000\u0000\u0000\u0084\u0099\u0003\u0014\n\u0000\u0085\u0086\u0003"+
-		"\u0018\f\u0000\u0086\u0087\u0005\u001e\u0000\u0000\u0087\u0099\u0001\u0000"+
-		"\u0000\u0000\u0088\u0089\u0003\u001a\r\u0000\u0089\u008a\u0005\u001e\u0000"+
-		"\u0000\u008a\u0099\u0001\u0000\u0000\u0000\u008b\u0099\u0003\u001c\u000e"+
-		"\u0000\u008c\u0099\u0003\u001e\u000f\u0000\u008d\u008f\u0005\b\u0000\u0000"+
-		"\u008e\u0090\u0003$\u0012\u0000\u008f\u008e\u0001\u0000\u0000\u0000\u008f"+
-		"\u0090\u0001\u0000\u0000\u0000\u0090\u0091\u0001\u0000\u0000\u0000\u0091"+
-		"\u0099\u0005\u001e\u0000\u0000\u0092\u0093\u0005\u000e\u0000\u0000\u0093"+
-		"\u0094\u0005\u0018\u0000\u0000\u0094\u0095\u0003$\u0012\u0000\u0095\u0096"+
-		"\u0005\u0019\u0000\u0000\u0096\u0097\u0005\u001e\u0000\u0000\u0097\u0099"+
-		"\u0001\u0000\u0000\u0000\u0098\u0084\u0001\u0000\u0000\u0000\u0098\u0085"+
-		"\u0001\u0000\u0000\u0000\u0098\u0088\u0001\u0000\u0000\u0000\u0098\u008b"+
-		"\u0001\u0000\u0000\u0000\u0098\u008c\u0001\u0000\u0000\u0000\u0098\u008d"+
-		"\u0001\u0000\u0000\u0000\u0098\u0092\u0001\u0000\u0000\u0000\u0099\u0017"+
-		"\u0001\u0000\u0000\u0000\u009a\u009b\u0003\b\u0004\u0000\u009b\u009c\u0005"+
-		"3\u0000\u0000\u009c\u009d\u0005!\u0000\u0000\u009d\u009e\u0003$\u0012"+
-		"\u0000\u009e\u0019\u0001\u0000\u0000\u0000\u009f\u00a0\u0003\"\u0011\u0000"+
-		"\u00a0\u00a1\u0007\u0002\u0000\u0000\u00a1\u00a2\u0003$\u0012\u0000\u00a2"+
-		"\u00b1\u0001\u0000\u0000\u0000\u00a3\u00a4\u0003\"\u0011\u0000\u00a4\u00a5"+
-		"\u0005$\u0000\u0000\u00a5\u00b1\u0001\u0000\u0000\u0000\u00a6\u00a7\u0003"+
-		"\"\u0011\u0000\u00a7\u00a8\u0005%\u0000\u0000\u00a8\u00b1\u0001\u0000"+
-		"\u0000\u0000\u00a9\u00aa\u0003\"\u0011\u0000\u00aa\u00ac\u0005\u0018\u0000"+
-		"\u0000\u00ab\u00ad\u0003 \u0010\u0000\u00ac\u00ab\u0001\u0000\u0000\u0000"+
-		"\u00ac\u00ad\u0001\u0000\u0000\u0000\u00ad\u00ae\u0001\u0000\u0000\u0000"+
-		"\u00ae\u00af\u0005\u0019\u0000\u0000\u00af\u00b1\u0001\u0000\u0000\u0000"+
-		"\u00b0\u009f\u0001\u0000\u0000\u0000\u00b0\u00a3\u0001\u0000\u0000\u0000"+
-		"\u00b0\u00a6\u0001\u0000\u0000\u0000\u00b0\u00a9\u0001\u0000\u0000\u0000"+
-		"\u00b1\u001b\u0001\u0000\u0000\u0000\u00b2\u00b3\u0005\t\u0000\u0000\u00b3"+
-		"\u00b4\u0005\u0018\u0000\u0000\u00b4\u00b5\u0003$\u0012\u0000\u00b5\u00b6"+
-		"\u0005\u0019\u0000\u0000\u00b6\u00b9\u0003\u0016\u000b\u0000\u00b7\u00b8"+
-		"\u0005\n\u0000\u0000\u00b8\u00ba\u0003\u0016\u000b\u0000\u00b9\u00b7\u0001"+
-		"\u0000\u0000\u0000\u00b9\u00ba\u0001\u0000\u0000\u0000\u00ba\u001d\u0001"+
-		"\u0000\u0000\u0000\u00bb\u00bc\u0005\u000b\u0000\u0000\u00bc\u00bf\u0005"+
-		"\u0018\u0000\u0000\u00bd\u00c0\u0003\u0018\f\u0000\u00be\u00c0\u0003\u001a"+
-		"\r\u0000\u00bf\u00bd\u0001\u0000\u0000\u0000\u00bf\u00be\u0001\u0000\u0000"+
-		"\u0000\u00bf\u00c0\u0001\u0000\u0000\u0000\u00c0\u00c1\u0001\u0000\u0000"+
-		"\u0000\u00c1\u00c2\u0005\u001e\u0000\u0000\u00c2\u00c3\u0003$\u0012\u0000"+
-		"\u00c3\u00c4\u0005\u001e\u0000\u0000\u00c4\u00c5\u0003\u001a\r\u0000\u00c5"+
-		"\u00c6\u0005\u0019\u0000\u0000\u00c6\u00c7\u0003\u0016\u000b\u0000\u00c7"+
-		"\u001f\u0001\u0000\u0000\u0000\u00c8\u00cd\u0003$\u0012\u0000\u00c9\u00ca"+
-		"\u0005 \u0000\u0000\u00ca\u00cc\u0003$\u0012\u0000\u00cb\u00c9\u0001\u0000"+
-		"\u0000\u0000\u00cc\u00cf\u0001\u0000\u0000\u0000\u00cd\u00cb\u0001\u0000"+
-		"\u0000\u0000\u00cd\u00ce\u0001\u0000\u0000\u0000\u00ce!\u0001\u0000\u0000"+
-		"\u0000\u00cf\u00cd\u0001\u0000\u0000\u0000\u00d0\u00d1\u0005\r\u0000\u0000"+
-		"\u00d1\u00d3\u0005\u001f\u0000\u0000\u00d2\u00d0\u0001\u0000\u0000\u0000"+
-		"\u00d2\u00d3\u0001\u0000\u0000\u0000\u00d3\u00d4\u0001\u0000\u0000\u0000"+
-		"\u00d4\u00db\u00053\u0000\u0000\u00d5\u00d6\u0005\u001c\u0000\u0000\u00d6"+
-		"\u00d7\u0003$\u0012\u0000\u00d7\u00d8\u0005\u001d\u0000\u0000\u00d8\u00da"+
-		"\u0001\u0000\u0000\u0000\u00d9\u00d5\u0001\u0000\u0000\u0000\u00da\u00dd"+
-		"\u0001\u0000\u0000\u0000\u00db\u00d9\u0001\u0000\u0000\u0000\u00db\u00dc"+
-		"\u0001\u0000\u0000\u0000\u00dc\u00eb\u0001\u0000\u0000\u0000\u00dd\u00db"+
-		"\u0001\u0000\u0000\u0000\u00de\u00df\u0005\u001f\u0000\u0000\u00df\u00e6"+
-		"\u00053\u0000\u0000\u00e0\u00e1\u0005\u001c\u0000\u0000\u00e1\u00e2\u0003"+
-		"$\u0012\u0000\u00e2\u00e3\u0005\u001d\u0000\u0000\u00e3\u00e5\u0001\u0000"+
-		"\u0000\u0000\u00e4\u00e0\u0001\u0000\u0000\u0000\u00e5\u00e8\u0001\u0000"+
-		"\u0000\u0000\u00e6\u00e4\u0001\u0000\u0000\u0000\u00e6\u00e7\u0001\u0000"+
-		"\u0000\u0000\u00e7\u00ea\u0001\u0000\u0000\u0000\u00e8\u00e6\u0001\u0000"+
-		"\u0000\u0000\u00e9\u00de\u0001\u0000\u0000\u0000\u00ea\u00ed\u0001\u0000"+
-		"\u0000\u0000\u00eb\u00e9\u0001\u0000\u0000\u0000\u00eb\u00ec\u0001\u0000"+
-		"\u0000\u0000\u00ec#\u0001\u0000\u0000\u0000\u00ed\u00eb\u0001\u0000\u0000"+
-		"\u0000\u00ee\u00ef\u0006\u0012\uffff\uffff\u0000\u00ef\u00f0\u0005\u0018"+
-		"\u0000\u0000\u00f0\u00f1\u0003$\u0012\u0000\u00f1\u00f2\u0005\u0019\u0000"+
-		"\u0000\u00f2\u0111\u0001\u0000\u0000\u0000\u00f3\u00f4\u0005\f\u0000\u0000"+
-		"\u00f4\u00f5\u0003\b\u0004\u0000\u00f5\u00f6\u0005\u001c\u0000\u0000\u00f6"+
-		"\u00f7\u0003$\u0012\u0000\u00f7\u00f8\u0005\u001d\u0000\u0000\u00f8\u0111"+
-		"\u0001\u0000\u0000\u0000\u00f9\u00fa\u0005\f\u0000\u0000\u00fa\u00fb\u0005"+
-		"3\u0000\u0000\u00fb\u00fd\u0005\u0018\u0000\u0000\u00fc\u00fe\u0003 \u0010"+
-		"\u0000\u00fd\u00fc\u0001\u0000\u0000\u0000\u00fd\u00fe\u0001\u0000\u0000"+
-		"\u0000\u00fe\u00ff\u0001\u0000\u0000\u0000\u00ff\u0111\u0005\u0019\u0000"+
-		"\u0000\u0100\u0101\u00052\u0000\u0000\u0101\u0111\u0003$\u0012\u000e\u0102"+
-		"\u0108\u0003\"\u0011\u0000\u0103\u0105\u0005\u0018\u0000\u0000\u0104\u0106"+
-		"\u0003 \u0010\u0000\u0105\u0104\u0001\u0000\u0000\u0000\u0105\u0106\u0001"+
-		"\u0000\u0000\u0000\u0106\u0107\u0001\u0000\u0000\u0000\u0107\u0109\u0005"+
-		"\u0019\u0000\u0000\u0108\u0103\u0001\u0000\u0000\u0000\u0108\u0109\u0001"+
-		"\u0000\u0000\u0000\u0109\u0111\u0001\u0000\u0000\u0000\u010a\u0111\u0005"+
-		"4\u0000\u0000\u010b\u0111\u00055\u0000\u0000\u010c\u0111\u00056\u0000"+
-		"\u0000\u010d\u0111\u0005\u000f\u0000\u0000\u010e\u0111\u0005\u0010\u0000"+
-		"\u0000\u010f\u0111\u0005\u0011\u0000\u0000\u0110\u00ee\u0001\u0000\u0000"+
-		"\u0000\u0110\u00f3\u0001\u0000\u0000\u0000\u0110\u00f9\u0001\u0000\u0000"+
-		"\u0000\u0110\u0100\u0001\u0000\u0000\u0000\u0110\u0102\u0001\u0000\u0000"+
-		"\u0000\u0110\u010a\u0001\u0000\u0000\u0000\u0110\u010b\u0001\u0000\u0000"+
-		"\u0000\u0110\u010c\u0001\u0000\u0000\u0000\u0110\u010d\u0001\u0000\u0000"+
-		"\u0000\u0110\u010e\u0001\u0000\u0000\u0000\u0110\u010f\u0001\u0000\u0000"+
-		"\u0000\u0111\u0126\u0001\u0000\u0000\u0000\u0112\u0113\n\r\u0000\u0000"+
-		"\u0113\u0114\u0007\u0003\u0000\u0000\u0114\u0125\u0003$\u0012\u000e\u0115"+
-		"\u0116\n\f\u0000\u0000\u0116\u0117\u0007\u0004\u0000\u0000\u0117\u0125"+
-		"\u0003$\u0012\r\u0118\u0119\n\u000b\u0000\u0000\u0119\u011a\u0007\u0005"+
-		"\u0000\u0000\u011a\u0125\u0003$\u0012\f\u011b\u011c\n\n\u0000\u0000\u011c"+
-		"\u011d\u0007\u0006\u0000\u0000\u011d\u0125\u0003$\u0012\u000b\u011e\u011f"+
-		"\n\t\u0000\u0000\u011f\u0120\u00050\u0000\u0000\u0120\u0125\u0003$\u0012"+
-		"\n\u0121\u0122\n\b\u0000\u0000\u0122\u0123\u00051\u0000\u0000\u0123\u0125"+
-		"\u0003$\u0012\t\u0124\u0112\u0001\u0000\u0000\u0000\u0124\u0115\u0001"+
-		"\u0000\u0000\u0000\u0124\u0118\u0001\u0000\u0000\u0000\u0124\u011b\u0001"+
-		"\u0000\u0000\u0000\u0124\u011e\u0001\u0000\u0000\u0000\u0124\u0121\u0001"+
-		"\u0000\u0000\u0000\u0125\u0128\u0001\u0000\u0000\u0000\u0126\u0124\u0001"+
-		"\u0000\u0000\u0000\u0126\u0127\u0001\u0000\u0000\u0000\u0127%\u0001\u0000"+
-		"\u0000\u0000\u0128\u0126\u0001\u0000\u0000\u0000 ).4:BINTY_bfku\u007f"+
-		"\u008f\u0098\u00ac\u00b0\u00b9\u00bf\u00cd\u00d2\u00db\u00e6\u00eb\u00fd"+
-		"\u0105\u0108\u0110\u0124\u0126";
+		"\u0002\u0013\u0007\u0013\u0002\u0014\u0007\u0014\u0002\u0015\u0007\u0015"+
+		"\u0002\u0016\u0007\u0016\u0002\u0017\u0007\u0017\u0002\u0018\u0007\u0018"+
+		"\u0001\u0000\u0004\u00004\b\u0000\u000b\u0000\f\u00005\u0001\u0000\u0001"+
+		"\u0000\u0001\u0001\u0003\u0001;\b\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0003\u0001A\b\u0001\u0001\u0001\u0001\u0001\u0005"+
+		"\u0001E\b\u0001\n\u0001\f\u0001H\t\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0002\u0001\u0002\u0001\u0002\u0003\u0002O\b\u0002\u0001\u0003\u0001"+
+		"\u0003\u0001\u0004\u0001\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0005"+
+		"\u0005X\b\u0005\n\u0005\f\u0005[\t\u0005\u0001\u0006\u0003\u0006^\b\u0006"+
+		"\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0003\u0006d\b\u0006"+
+		"\u0001\u0006\u0001\u0006\u0001\u0007\u0003\u0007i\b\u0007\u0001\u0007"+
+		"\u0001\u0007\u0001\u0007\u0003\u0007n\b\u0007\u0001\u0007\u0001\u0007"+
+		"\u0001\u0007\u0001\b\u0003\bt\b\b\u0001\b\u0003\bw\b\b\u0001\b\u0001\b"+
+		"\u0003\b{\b\b\u0001\b\u0001\b\u0001\b\u0003\b\u0080\b\b\u0001\b\u0001"+
+		"\b\u0001\b\u0001\t\u0001\t\u0001\t\u0005\t\u0088\b\t\n\t\f\t\u008b\t\t"+
+		"\u0001\n\u0001\n\u0001\n\u0001\u000b\u0001\u000b\u0005\u000b\u0092\b\u000b"+
+		"\n\u000b\f\u000b\u0095\t\u000b\u0001\u000b\u0001\u000b\u0001\f\u0001\f"+
+		"\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001"+
+		"\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0003\f\u00ab"+
+		"\b\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001"+
+		"\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0003"+
+		"\f\u00be\b\f\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u00c4\b\r\u0001\u000e"+
+		"\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e"+
+		"\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e"+
+		"\u0003\u000e\u00d3\b\u000e\u0001\u000e\u0001\u000e\u0003\u000e\u00d7\b"+
+		"\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001"+
+		"\u000f\u0001\u000f\u0003\u000f\u00e0\b\u000f\u0001\u0010\u0001\u0010\u0001"+
+		"\u0010\u0001\u0010\u0003\u0010\u00e6\b\u0010\u0001\u0010\u0001\u0010\u0003"+
+		"\u0010\u00ea\b\u0010\u0001\u0010\u0001\u0010\u0003\u0010\u00ee\b\u0010"+
+		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0011\u0001\u0011\u0001\u0011"+
+		"\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0012\u0001\u0012\u0001\u0012"+
+		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0013"+
+		"\u0001\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0005\u0013"+
+		"\u0107\b\u0013\n\u0013\f\u0013\u010a\t\u0013\u0001\u0013\u0003\u0013\u010d"+
+		"\b\u0013\u0001\u0013\u0001\u0013\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
+		"\u0014\u0005\u0014\u0115\b\u0014\n\u0014\f\u0014\u0118\t\u0014\u0001\u0015"+
+		"\u0001\u0015\u0001\u0015\u0005\u0015\u011d\b\u0015\n\u0015\f\u0015\u0120"+
+		"\t\u0015\u0001\u0016\u0001\u0016\u0001\u0016\u0005\u0016\u0125\b\u0016"+
+		"\n\u0016\f\u0016\u0128\t\u0016\u0001\u0017\u0001\u0017\u0003\u0017\u012c"+
+		"\b\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0005"+
+		"\u0017\u0133\b\u0017\n\u0017\f\u0017\u0136\t\u0017\u0001\u0017\u0001\u0017"+
+		"\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0005\u0017\u013e\b\u0017"+
+		"\n\u0017\f\u0017\u0141\t\u0017\u0005\u0017\u0143\b\u0017\n\u0017\f\u0017"+
+		"\u0146\t\u0017\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018"+
+		"\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018"+
+		"\u0004\u0018\u0153\b\u0018\u000b\u0018\f\u0018\u0154\u0001\u0018\u0001"+
+		"\u0018\u0005\u0018\u0159\b\u0018\n\u0018\f\u0018\u015c\t\u0018\u0001\u0018"+
+		"\u0001\u0018\u0001\u0018\u0001\u0018\u0003\u0018\u0162\b\u0018\u0001\u0018"+
+		"\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0005\u0018\u0169\b\u0018"+
+		"\n\u0018\f\u0018\u016c\t\u0018\u0003\u0018\u016e\b\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0003\u0018\u0179\b\u0018\u0001\u0018\u0003\u0018\u017c"+
+		"\b\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0003\u0018\u0185\b\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001"+
+		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0005\u0018\u019f\b\u0018\n"+
+		"\u0018\f\u0018\u01a2\t\u0018\u0001\u0018\u0000\u00010\u0019\u0000\u0002"+
+		"\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e"+
+		" \"$&(*,.0\u0000\u0007\u0001\u0000\u0001\u0003\u0002\u0000\u001b @@\u0001"+
+		"\u0000,/\u0001\u000046\u0001\u000023\u0001\u00007:\u0001\u0000;<\u01d7"+
+		"\u00003\u0001\u0000\u0000\u0000\u0002:\u0001\u0000\u0000\u0000\u0004N"+
+		"\u0001\u0000\u0000\u0000\u0006P\u0001\u0000\u0000\u0000\bR\u0001\u0000"+
+		"\u0000\u0000\nT\u0001\u0000\u0000\u0000\f]\u0001\u0000\u0000\u0000\u000e"+
+		"h\u0001\u0000\u0000\u0000\u0010s\u0001\u0000\u0000\u0000\u0012\u0084\u0001"+
+		"\u0000\u0000\u0000\u0014\u008c\u0001\u0000\u0000\u0000\u0016\u008f\u0001"+
+		"\u0000\u0000\u0000\u0018\u00bd\u0001\u0000\u0000\u0000\u001a\u00bf\u0001"+
+		"\u0000\u0000\u0000\u001c\u00d6\u0001\u0000\u0000\u0000\u001e\u00d8\u0001"+
+		"\u0000\u0000\u0000 \u00e1\u0001\u0000\u0000\u0000\"\u00f2\u0001\u0000"+
+		"\u0000\u0000$\u00f8\u0001\u0000\u0000\u0000&\u0100\u0001\u0000\u0000\u0000"+
+		"(\u0110\u0001\u0000\u0000\u0000*\u0119\u0001\u0000\u0000\u0000,\u0121"+
+		"\u0001\u0000\u0000\u0000.\u012b\u0001\u0000\u0000\u00000\u0184\u0001\u0000"+
+		"\u0000\u000024\u0003\u0002\u0001\u000032\u0001\u0000\u0000\u000045\u0001"+
+		"\u0000\u0000\u000053\u0001\u0000\u0000\u000056\u0001\u0000\u0000\u0000"+
+		"67\u0001\u0000\u0000\u000078\u0005\u0000\u0000\u00018\u0001\u0001\u0000"+
+		"\u0000\u00009;\u0003\u0006\u0003\u0000:9\u0001\u0000\u0000\u0000:;\u0001"+
+		"\u0000\u0000\u0000;<\u0001\u0000\u0000\u0000<=\u0005\u0004\u0000\u0000"+
+		"=@\u0005@\u0000\u0000>?\u0005\u0005\u0000\u0000?A\u0005@\u0000\u0000@"+
+		">\u0001\u0000\u0000\u0000@A\u0001\u0000\u0000\u0000AB\u0001\u0000\u0000"+
+		"\u0000BF\u0005#\u0000\u0000CE\u0003\u0004\u0002\u0000DC\u0001\u0000\u0000"+
+		"\u0000EH\u0001\u0000\u0000\u0000FD\u0001\u0000\u0000\u0000FG\u0001\u0000"+
+		"\u0000\u0000GI\u0001\u0000\u0000\u0000HF\u0001\u0000\u0000\u0000IJ\u0005"+
+		"$\u0000\u0000J\u0003\u0001\u0000\u0000\u0000KO\u0003\f\u0006\u0000LO\u0003"+
+		"\u000e\u0007\u0000MO\u0003\u0010\b\u0000NK\u0001\u0000\u0000\u0000NL\u0001"+
+		"\u0000\u0000\u0000NM\u0001\u0000\u0000\u0000O\u0005\u0001\u0000\u0000"+
+		"\u0000PQ\u0007\u0000\u0000\u0000Q\u0007\u0001\u0000\u0000\u0000RS\u0007"+
+		"\u0001\u0000\u0000S\t\u0001\u0000\u0000\u0000TY\u0003\b\u0004\u0000UV"+
+		"\u0005%\u0000\u0000VX\u0005&\u0000\u0000WU\u0001\u0000\u0000\u0000X[\u0001"+
+		"\u0000\u0000\u0000YW\u0001\u0000\u0000\u0000YZ\u0001\u0000\u0000\u0000"+
+		"Z\u000b\u0001\u0000\u0000\u0000[Y\u0001\u0000\u0000\u0000\\^\u0003\u0006"+
+		"\u0003\u0000]\\\u0001\u0000\u0000\u0000]^\u0001\u0000\u0000\u0000^_\u0001"+
+		"\u0000\u0000\u0000_`\u0003\n\u0005\u0000`c\u0005@\u0000\u0000ab\u0005"+
+		",\u0000\u0000bd\u00030\u0018\u0000ca\u0001\u0000\u0000\u0000cd\u0001\u0000"+
+		"\u0000\u0000de\u0001\u0000\u0000\u0000ef\u0005\'\u0000\u0000f\r\u0001"+
+		"\u0000\u0000\u0000gi\u0003\u0006\u0003\u0000hg\u0001\u0000\u0000\u0000"+
+		"hi\u0001\u0000\u0000\u0000ij\u0001\u0000\u0000\u0000jk\u0005@\u0000\u0000"+
+		"km\u0005!\u0000\u0000ln\u0003\u0012\t\u0000ml\u0001\u0000\u0000\u0000"+
+		"mn\u0001\u0000\u0000\u0000no\u0001\u0000\u0000\u0000op\u0005\"\u0000\u0000"+
+		"pq\u0003\u0016\u000b\u0000q\u000f\u0001\u0000\u0000\u0000rt\u0005\u0006"+
+		"\u0000\u0000sr\u0001\u0000\u0000\u0000st\u0001\u0000\u0000\u0000tv\u0001"+
+		"\u0000\u0000\u0000uw\u0003\u0006\u0003\u0000vu\u0001\u0000\u0000\u0000"+
+		"vw\u0001\u0000\u0000\u0000wz\u0001\u0000\u0000\u0000x{\u0003\n\u0005\u0000"+
+		"y{\u0005\u0007\u0000\u0000zx\u0001\u0000\u0000\u0000zy\u0001\u0000\u0000"+
+		"\u0000{|\u0001\u0000\u0000\u0000|}\u0005@\u0000\u0000}\u007f\u0005!\u0000"+
+		"\u0000~\u0080\u0003\u0012\t\u0000\u007f~\u0001\u0000\u0000\u0000\u007f"+
+		"\u0080\u0001\u0000\u0000\u0000\u0080\u0081\u0001\u0000\u0000\u0000\u0081"+
+		"\u0082\u0005\"\u0000\u0000\u0082\u0083\u0003\u0016\u000b\u0000\u0083\u0011"+
+		"\u0001\u0000\u0000\u0000\u0084\u0089\u0003\u0014\n\u0000\u0085\u0086\u0005"+
+		")\u0000\u0000\u0086\u0088\u0003\u0014\n\u0000\u0087\u0085\u0001\u0000"+
+		"\u0000\u0000\u0088\u008b\u0001\u0000\u0000\u0000\u0089\u0087\u0001\u0000"+
+		"\u0000\u0000\u0089\u008a\u0001\u0000\u0000\u0000\u008a\u0013\u0001\u0000"+
+		"\u0000\u0000\u008b\u0089\u0001\u0000\u0000\u0000\u008c\u008d\u0003\n\u0005"+
+		"\u0000\u008d\u008e\u0005@\u0000\u0000\u008e\u0015\u0001\u0000\u0000\u0000"+
+		"\u008f\u0093\u0005#\u0000\u0000\u0090\u0092\u0003\u0018\f\u0000\u0091"+
+		"\u0090\u0001\u0000\u0000\u0000\u0092\u0095\u0001\u0000\u0000\u0000\u0093"+
+		"\u0091\u0001\u0000\u0000\u0000\u0093\u0094\u0001\u0000\u0000\u0000\u0094"+
+		"\u0096\u0001\u0000\u0000\u0000\u0095\u0093\u0001\u0000\u0000\u0000\u0096"+
+		"\u0097\u0005$\u0000\u0000\u0097\u0017\u0001\u0000\u0000\u0000\u0098\u00be"+
+		"\u0003\u0016\u000b\u0000\u0099\u009a\u0003\u001a\r\u0000\u009a\u009b\u0005"+
+		"\'\u0000\u0000\u009b\u00be\u0001\u0000\u0000\u0000\u009c\u009d\u0003\u001c"+
+		"\u000e\u0000\u009d\u009e\u0005\'\u0000\u0000\u009e\u00be\u0001\u0000\u0000"+
+		"\u0000\u009f\u00be\u0003\u001e\u000f\u0000\u00a0\u00be\u0003 \u0010\u0000"+
+		"\u00a1\u00be\u0003\"\u0011\u0000\u00a2\u00be\u0003$\u0012\u0000\u00a3"+
+		"\u00be\u0003&\u0013\u0000\u00a4\u00a5\u0005\u0011\u0000\u0000\u00a5\u00be"+
+		"\u0005\'\u0000\u0000\u00a6\u00a7\u0005\u0012\u0000\u0000\u00a7\u00be\u0005"+
+		"\'\u0000\u0000\u00a8\u00aa\u0005\b\u0000\u0000\u00a9\u00ab\u00030\u0018"+
+		"\u0000\u00aa\u00a9\u0001\u0000\u0000\u0000\u00aa\u00ab\u0001\u0000\u0000"+
+		"\u0000\u00ab\u00ac\u0001\u0000\u0000\u0000\u00ac\u00be\u0005\'\u0000\u0000"+
+		"\u00ad\u00ae\u0005\u0015\u0000\u0000\u00ae\u00af\u0005!\u0000\u0000\u00af"+
+		"\u00b0\u00030\u0018\u0000\u00b0\u00b1\u0005\"\u0000\u0000\u00b1\u00b2"+
+		"\u0005\'\u0000\u0000\u00b2\u00be\u0001\u0000\u0000\u0000\u00b3\u00b4\u0005"+
+		"\u0016\u0000\u0000\u00b4\u00b5\u0005!\u0000\u0000\u00b5\u00b6\u00030\u0018"+
+		"\u0000\u00b6\u00b7\u0005\"\u0000\u0000\u00b7\u00b8\u0005\'\u0000\u0000"+
+		"\u00b8\u00be\u0001\u0000\u0000\u0000\u00b9\u00ba\u0005\u0017\u0000\u0000"+
+		"\u00ba\u00bb\u0005!\u0000\u0000\u00bb\u00bc\u0005\"\u0000\u0000\u00bc"+
+		"\u00be\u0005\'\u0000\u0000\u00bd\u0098\u0001\u0000\u0000\u0000\u00bd\u0099"+
+		"\u0001\u0000\u0000\u0000\u00bd\u009c\u0001\u0000\u0000\u0000\u00bd\u009f"+
+		"\u0001\u0000\u0000\u0000\u00bd\u00a0\u0001\u0000\u0000\u0000\u00bd\u00a1"+
+		"\u0001\u0000\u0000\u0000\u00bd\u00a2\u0001\u0000\u0000\u0000\u00bd\u00a3"+
+		"\u0001\u0000\u0000\u0000\u00bd\u00a4\u0001\u0000\u0000\u0000\u00bd\u00a6"+
+		"\u0001\u0000\u0000\u0000\u00bd\u00a8\u0001\u0000\u0000\u0000\u00bd\u00ad"+
+		"\u0001\u0000\u0000\u0000\u00bd\u00b3\u0001\u0000\u0000\u0000\u00bd\u00b9"+
+		"\u0001\u0000\u0000\u0000\u00be\u0019\u0001\u0000\u0000\u0000\u00bf\u00c0"+
+		"\u0003\n\u0005\u0000\u00c0\u00c3\u0005@\u0000\u0000\u00c1\u00c2\u0005"+
+		",\u0000\u0000\u00c2\u00c4\u00030\u0018\u0000\u00c3\u00c1\u0001\u0000\u0000"+
+		"\u0000\u00c3\u00c4\u0001\u0000\u0000\u0000\u00c4\u001b\u0001\u0000\u0000"+
+		"\u0000\u00c5\u00c6\u0003.\u0017\u0000\u00c6\u00c7\u0007\u0002\u0000\u0000"+
+		"\u00c7\u00c8\u00030\u0018\u0000\u00c8\u00d7\u0001\u0000\u0000\u0000\u00c9"+
+		"\u00ca\u0003.\u0017\u0000\u00ca\u00cb\u00050\u0000\u0000\u00cb\u00d7\u0001"+
+		"\u0000\u0000\u0000\u00cc\u00cd\u0003.\u0017\u0000\u00cd\u00ce\u00051\u0000"+
+		"\u0000\u00ce\u00d7\u0001\u0000\u0000\u0000\u00cf\u00d0\u0003.\u0017\u0000"+
+		"\u00d0\u00d2\u0005!\u0000\u0000\u00d1\u00d3\u0003,\u0016\u0000\u00d2\u00d1"+
+		"\u0001\u0000\u0000\u0000\u00d2\u00d3\u0001\u0000\u0000\u0000\u00d3\u00d4"+
+		"\u0001\u0000\u0000\u0000\u00d4\u00d5\u0005\"\u0000\u0000\u00d5\u00d7\u0001"+
+		"\u0000\u0000\u0000\u00d6\u00c5\u0001\u0000\u0000\u0000\u00d6\u00c9\u0001"+
+		"\u0000\u0000\u0000\u00d6\u00cc\u0001\u0000\u0000\u0000\u00d6\u00cf\u0001"+
+		"\u0000\u0000\u0000\u00d7\u001d\u0001\u0000\u0000\u0000\u00d8\u00d9\u0005"+
+		"\t\u0000\u0000\u00d9\u00da\u0005!\u0000\u0000\u00da\u00db\u00030\u0018"+
+		"\u0000\u00db\u00dc\u0005\"\u0000\u0000\u00dc\u00df\u0003\u0018\f\u0000"+
+		"\u00dd\u00de\u0005\n\u0000\u0000\u00de\u00e0\u0003\u0018\f\u0000\u00df"+
+		"\u00dd\u0001\u0000\u0000\u0000\u00df\u00e0\u0001\u0000\u0000\u0000\u00e0"+
+		"\u001f\u0001\u0000\u0000\u0000\u00e1\u00e2\u0005\u000b\u0000\u0000\u00e2"+
+		"\u00e5\u0005!\u0000\u0000\u00e3\u00e6\u0003\u001a\r\u0000\u00e4\u00e6"+
+		"\u0003\u001c\u000e\u0000\u00e5\u00e3\u0001\u0000\u0000\u0000\u00e5\u00e4"+
+		"\u0001\u0000\u0000\u0000\u00e5\u00e6\u0001\u0000\u0000\u0000\u00e6\u00e7"+
+		"\u0001\u0000\u0000\u0000\u00e7\u00e9\u0005\'\u0000\u0000\u00e8\u00ea\u0003"+
+		"0\u0018\u0000\u00e9\u00e8\u0001\u0000\u0000\u0000\u00e9\u00ea\u0001\u0000"+
+		"\u0000\u0000\u00ea\u00eb\u0001\u0000\u0000\u0000\u00eb\u00ed\u0005\'\u0000"+
+		"\u0000\u00ec\u00ee\u0003\u001c\u000e\u0000\u00ed\u00ec\u0001\u0000\u0000"+
+		"\u0000\u00ed\u00ee\u0001\u0000\u0000\u0000\u00ee\u00ef\u0001\u0000\u0000"+
+		"\u0000\u00ef\u00f0\u0005\"\u0000\u0000\u00f0\u00f1\u0003\u0018\f\u0000"+
+		"\u00f1!\u0001\u0000\u0000\u0000\u00f2\u00f3\u0005\f\u0000\u0000\u00f3"+
+		"\u00f4\u0005!\u0000\u0000\u00f4\u00f5\u00030\u0018\u0000\u00f5\u00f6\u0005"+
+		"\"\u0000\u0000\u00f6\u00f7\u0003\u0018\f\u0000\u00f7#\u0001\u0000\u0000"+
+		"\u0000\u00f8\u00f9\u0005\r\u0000\u0000\u00f9\u00fa\u0003\u0018\f\u0000"+
+		"\u00fa\u00fb\u0005\f\u0000\u0000\u00fb\u00fc\u0005!\u0000\u0000\u00fc"+
+		"\u00fd\u00030\u0018\u0000\u00fd\u00fe\u0005\"\u0000\u0000\u00fe\u00ff"+
+		"\u0005\'\u0000\u0000\u00ff%\u0001\u0000\u0000\u0000\u0100\u0101\u0005"+
+		"\u000e\u0000\u0000\u0101\u0102\u0005!\u0000\u0000\u0102\u0103\u00030\u0018"+
+		"\u0000\u0103\u0104\u0005\"\u0000\u0000\u0104\u0108\u0005#\u0000\u0000"+
+		"\u0105\u0107\u0003(\u0014\u0000\u0106\u0105\u0001\u0000\u0000\u0000\u0107"+
+		"\u010a\u0001\u0000\u0000\u0000\u0108\u0106\u0001\u0000\u0000\u0000\u0108"+
+		"\u0109\u0001\u0000\u0000\u0000\u0109\u010c\u0001\u0000\u0000\u0000\u010a"+
+		"\u0108\u0001\u0000\u0000\u0000\u010b\u010d\u0003*\u0015\u0000\u010c\u010b"+
+		"\u0001\u0000\u0000\u0000\u010c\u010d\u0001\u0000\u0000\u0000\u010d\u010e"+
+		"\u0001\u0000\u0000\u0000\u010e\u010f\u0005$\u0000\u0000\u010f\'\u0001"+
+		"\u0000\u0000\u0000\u0110\u0111\u0005\u000f\u0000\u0000\u0111\u0112\u0003"+
+		"0\u0018\u0000\u0112\u0116\u0005*\u0000\u0000\u0113\u0115\u0003\u0018\f"+
+		"\u0000\u0114\u0113\u0001\u0000\u0000\u0000\u0115\u0118\u0001\u0000\u0000"+
+		"\u0000\u0116\u0114\u0001\u0000\u0000\u0000\u0116\u0117\u0001\u0000\u0000"+
+		"\u0000\u0117)\u0001\u0000\u0000\u0000\u0118\u0116\u0001\u0000\u0000\u0000"+
+		"\u0119\u011a\u0005\u0010\u0000\u0000\u011a\u011e\u0005*\u0000\u0000\u011b"+
+		"\u011d\u0003\u0018\f\u0000\u011c\u011b\u0001\u0000\u0000\u0000\u011d\u0120"+
+		"\u0001\u0000\u0000\u0000\u011e\u011c\u0001\u0000\u0000\u0000\u011e\u011f"+
+		"\u0001\u0000\u0000\u0000\u011f+\u0001\u0000\u0000\u0000\u0120\u011e\u0001"+
+		"\u0000\u0000\u0000\u0121\u0126\u00030\u0018\u0000\u0122\u0123\u0005)\u0000"+
+		"\u0000\u0123\u0125\u00030\u0018\u0000\u0124\u0122\u0001\u0000\u0000\u0000"+
+		"\u0125\u0128\u0001\u0000\u0000\u0000\u0126\u0124\u0001\u0000\u0000\u0000"+
+		"\u0126\u0127\u0001\u0000\u0000\u0000\u0127-\u0001\u0000\u0000\u0000\u0128"+
+		"\u0126\u0001\u0000\u0000\u0000\u0129\u012a\u0005\u0014\u0000\u0000\u012a"+
+		"\u012c\u0005(\u0000\u0000\u012b\u0129\u0001\u0000\u0000\u0000\u012b\u012c"+
+		"\u0001\u0000\u0000\u0000\u012c\u012d\u0001\u0000\u0000\u0000\u012d\u0134"+
+		"\u0005@\u0000\u0000\u012e\u012f\u0005%\u0000\u0000\u012f\u0130\u00030"+
+		"\u0018\u0000\u0130\u0131\u0005&\u0000\u0000\u0131\u0133\u0001\u0000\u0000"+
+		"\u0000\u0132\u012e\u0001\u0000\u0000\u0000\u0133\u0136\u0001\u0000\u0000"+
+		"\u0000\u0134\u0132\u0001\u0000\u0000\u0000\u0134\u0135\u0001\u0000\u0000"+
+		"\u0000\u0135\u0144\u0001\u0000\u0000\u0000\u0136\u0134\u0001\u0000\u0000"+
+		"\u0000\u0137\u0138\u0005(\u0000\u0000\u0138\u013f\u0005@\u0000\u0000\u0139"+
+		"\u013a\u0005%\u0000\u0000\u013a\u013b\u00030\u0018\u0000\u013b\u013c\u0005"+
+		"&\u0000\u0000\u013c\u013e\u0001\u0000\u0000\u0000\u013d\u0139\u0001\u0000"+
+		"\u0000\u0000\u013e\u0141\u0001\u0000\u0000\u0000\u013f\u013d\u0001\u0000"+
+		"\u0000\u0000\u013f\u0140\u0001\u0000\u0000\u0000\u0140\u0143\u0001\u0000"+
+		"\u0000\u0000\u0141\u013f\u0001\u0000\u0000\u0000\u0142\u0137\u0001\u0000"+
+		"\u0000\u0000\u0143\u0146\u0001\u0000\u0000\u0000\u0144\u0142\u0001\u0000"+
+		"\u0000\u0000\u0144\u0145\u0001\u0000\u0000\u0000\u0145/\u0001\u0000\u0000"+
+		"\u0000\u0146\u0144\u0001\u0000\u0000\u0000\u0147\u0148\u0006\u0018\uffff"+
+		"\uffff\u0000\u0148\u0149\u0005!\u0000\u0000\u0149\u014a\u00030\u0018\u0000"+
+		"\u014a\u014b\u0005\"\u0000\u0000\u014b\u0185\u0001\u0000\u0000\u0000\u014c"+
+		"\u014d\u0005\u0013\u0000\u0000\u014d\u0152\u0003\b\u0004\u0000\u014e\u014f"+
+		"\u0005%\u0000\u0000\u014f\u0150\u00030\u0018\u0000\u0150\u0151\u0005&"+
+		"\u0000\u0000\u0151\u0153\u0001\u0000\u0000\u0000\u0152\u014e\u0001\u0000"+
+		"\u0000\u0000\u0153\u0154\u0001\u0000\u0000\u0000\u0154\u0152\u0001\u0000"+
+		"\u0000\u0000\u0154\u0155\u0001\u0000\u0000\u0000\u0155\u015a\u0001\u0000"+
+		"\u0000\u0000\u0156\u0157\u0005%\u0000\u0000\u0157\u0159\u0005&\u0000\u0000"+
+		"\u0158\u0156\u0001\u0000\u0000\u0000\u0159\u015c\u0001\u0000\u0000\u0000"+
+		"\u015a\u0158\u0001\u0000\u0000\u0000\u015a\u015b\u0001\u0000\u0000\u0000"+
+		"\u015b\u0185\u0001\u0000\u0000\u0000\u015c\u015a\u0001\u0000\u0000\u0000"+
+		"\u015d\u015e\u0005\u0013\u0000\u0000\u015e\u015f\u0005@\u0000\u0000\u015f"+
+		"\u0161\u0005!\u0000\u0000\u0160\u0162\u0003,\u0016\u0000\u0161\u0160\u0001"+
+		"\u0000\u0000\u0000\u0161\u0162\u0001\u0000\u0000\u0000\u0162\u0163\u0001"+
+		"\u0000\u0000\u0000\u0163\u0185\u0005\"\u0000\u0000\u0164\u016d\u0005#"+
+		"\u0000\u0000\u0165\u016a\u00030\u0018\u0000\u0166\u0167\u0005)\u0000\u0000"+
+		"\u0167\u0169\u00030\u0018\u0000\u0168\u0166\u0001\u0000\u0000\u0000\u0169"+
+		"\u016c\u0001\u0000\u0000\u0000\u016a\u0168\u0001\u0000\u0000\u0000\u016a"+
+		"\u016b\u0001\u0000\u0000\u0000\u016b\u016e\u0001\u0000\u0000\u0000\u016c"+
+		"\u016a\u0001\u0000\u0000\u0000\u016d\u0165\u0001\u0000\u0000\u0000\u016d"+
+		"\u016e\u0001\u0000\u0000\u0000\u016e\u016f\u0001\u0000\u0000\u0000\u016f"+
+		"\u0185\u0005$\u0000\u0000\u0170\u0171\u0005\u0017\u0000\u0000\u0171\u0172"+
+		"\u0005!\u0000\u0000\u0172\u0185\u0005\"\u0000\u0000\u0173\u0174\u0005"+
+		"?\u0000\u0000\u0174\u0185\u00030\u0018\u0010\u0175\u017b\u0003.\u0017"+
+		"\u0000\u0176\u0178\u0005!\u0000\u0000\u0177\u0179\u0003,\u0016\u0000\u0178"+
+		"\u0177\u0001\u0000\u0000\u0000\u0178\u0179\u0001\u0000\u0000\u0000\u0179"+
+		"\u017a\u0001\u0000\u0000\u0000\u017a\u017c\u0005\"\u0000\u0000\u017b\u0176"+
+		"\u0001\u0000\u0000\u0000\u017b\u017c\u0001\u0000\u0000\u0000\u017c\u0185"+
+		"\u0001\u0000\u0000\u0000\u017d\u0185\u0005A\u0000\u0000\u017e\u0185\u0005"+
+		"B\u0000\u0000\u017f\u0185\u0005C\u0000\u0000\u0180\u0185\u0005D\u0000"+
+		"\u0000\u0181\u0185\u0005\u0018\u0000\u0000\u0182\u0185\u0005\u0019\u0000"+
+		"\u0000\u0183\u0185\u0005\u001a\u0000\u0000\u0184\u0147\u0001\u0000\u0000"+
+		"\u0000\u0184\u014c\u0001\u0000\u0000\u0000\u0184\u015d\u0001\u0000\u0000"+
+		"\u0000\u0184\u0164\u0001\u0000\u0000\u0000\u0184\u0170\u0001\u0000\u0000"+
+		"\u0000\u0184\u0173\u0001\u0000\u0000\u0000\u0184\u0175\u0001\u0000\u0000"+
+		"\u0000\u0184\u017d\u0001\u0000\u0000\u0000\u0184\u017e\u0001\u0000\u0000"+
+		"\u0000\u0184\u017f\u0001\u0000\u0000\u0000\u0184\u0180\u0001\u0000\u0000"+
+		"\u0000\u0184\u0181\u0001\u0000\u0000\u0000\u0184\u0182\u0001\u0000\u0000"+
+		"\u0000\u0184\u0183\u0001\u0000\u0000\u0000\u0185\u01a0\u0001\u0000\u0000"+
+		"\u0000\u0186\u0187\n\u000f\u0000\u0000\u0187\u0188\u0007\u0003\u0000\u0000"+
+		"\u0188\u019f\u00030\u0018\u0010\u0189\u018a\n\u000e\u0000\u0000\u018a"+
+		"\u018b\u0007\u0004\u0000\u0000\u018b\u019f\u00030\u0018\u000f\u018c\u018d"+
+		"\n\r\u0000\u0000\u018d\u018e\u0007\u0005\u0000\u0000\u018e\u019f\u0003"+
+		"0\u0018\u000e\u018f\u0190\n\f\u0000\u0000\u0190\u0191\u0007\u0006\u0000"+
+		"\u0000\u0191\u019f\u00030\u0018\r\u0192\u0193\n\u000b\u0000\u0000\u0193"+
+		"\u0194\u0005=\u0000\u0000\u0194\u019f\u00030\u0018\f\u0195\u0196\n\n\u0000"+
+		"\u0000\u0196\u0197\u0005>\u0000\u0000\u0197\u019f\u00030\u0018\u000b\u0198"+
+		"\u0199\n\t\u0000\u0000\u0199\u019a\u0005+\u0000\u0000\u019a\u019b\u0003"+
+		"0\u0018\u0000\u019b\u019c\u0005*\u0000\u0000\u019c\u019d\u00030\u0018"+
+		"\t\u019d\u019f\u0001\u0000\u0000\u0000\u019e\u0186\u0001\u0000\u0000\u0000"+
+		"\u019e\u0189\u0001\u0000\u0000\u0000\u019e\u018c\u0001\u0000\u0000\u0000"+
+		"\u019e\u018f\u0001\u0000\u0000\u0000\u019e\u0192\u0001\u0000\u0000\u0000"+
+		"\u019e\u0195\u0001\u0000\u0000\u0000\u019e\u0198\u0001\u0000\u0000\u0000"+
+		"\u019f\u01a2\u0001\u0000\u0000\u0000\u01a0\u019e\u0001\u0000\u0000\u0000"+
+		"\u01a0\u01a1\u0001\u0000\u0000\u0000\u01a11\u0001\u0000\u0000\u0000\u01a2"+
+		"\u01a0\u0001\u0000\u0000\u0000,5:@FNY]chmsvz\u007f\u0089\u0093\u00aa\u00bd"+
+		"\u00c3\u00d2\u00d6\u00df\u00e5\u00e9\u00ed\u0108\u010c\u0116\u011e\u0126"+
+		"\u012b\u0134\u013f\u0144\u0154\u015a\u0161\u016a\u016d\u0178\u017b\u0184"+
+		"\u019e\u01a0";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

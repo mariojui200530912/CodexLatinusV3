@@ -41,6 +41,12 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTipoDato(ZetarianoParser.TipoDatoContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#tipoEstructura}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTipoEstructura(ZetarianoParser.TipoEstructuraContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ZetarianoParser#declaracionAtributo}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -129,6 +135,36 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitForStmt(ZetarianoParser.ForStmtContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#whileStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStmt(ZetarianoParser.WhileStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#doWhileStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDoWhileStmt(ZetarianoParser.DoWhileStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#switchStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSwitchStmt(ZetarianoParser.SwitchStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#caseCode}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCaseCode(ZetarianoParser.CaseCodeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ZetarianoParser#defaultCode}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDefaultCode(ZetarianoParser.DefaultCodeContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ZetarianoParser#argumentos}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -147,6 +183,13 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExprAgrupacion(ZetarianoParser.ExprAgrupacionContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ExprArregloLiteral}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprArregloLiteral(ZetarianoParser.ExprArregloLiteralContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ExprEntero}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
@@ -190,6 +233,13 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprFalse(ZetarianoParser.ExprFalseContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ExprCaracter}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprCaracter(ZetarianoParser.ExprCaracterContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ExprTrue}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -218,6 +268,13 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprAccesoOlamada(ZetarianoParser.ExprAccesoOlamadaContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ExprMultDivMod}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprMultDivMod(ZetarianoParser.ExprMultDivModContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ExprSumaResta}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -239,6 +296,13 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprInstanciaArreglo(ZetarianoParser.ExprInstanciaArregloContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ExprTernario}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprTernario(ZetarianoParser.ExprTernarioContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ExprOr}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -246,17 +310,17 @@ public interface ZetarianoVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprOr(ZetarianoParser.ExprOrContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ExprMultDiv}
-	 * labeled alternative in {@link ZetarianoParser#expresion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprMultDiv(ZetarianoParser.ExprMultDivContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code ExprNull}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitExprNull(ZetarianoParser.ExprNullContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ExprReadln}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprReadln(ZetarianoParser.ExprReadlnContext ctx);
 }

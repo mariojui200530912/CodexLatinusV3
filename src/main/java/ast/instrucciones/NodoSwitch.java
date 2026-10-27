@@ -106,19 +106,4 @@ public class NodoSwitch extends Instruccion {
 
         return null;
     }
-
-    // Clase auxiliar estática para representar cada Caso
-    public static class NodoCaso {
-        public Expresion expresion;
-        public List<Instruccion> instrucciones;
-        public int linea, columna;
-        public String etiquetaBloque; // Asignada dinámicamente durante la generación
-
-        public NodoCaso(Expresion expresion, List<Instruccion> instrucciones, int linea, int columna) {
-            this.expresion = expresion;
-            this.instrucciones = instrucciones;
-            this.linea = linea;
-            this.columna = columna;
-        }
-    }
 }

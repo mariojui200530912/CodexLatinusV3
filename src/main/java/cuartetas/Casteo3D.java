@@ -1,5 +1,7 @@
 package cuartetas;
 
+import generador.TraductorRiscV;
+
 public class Casteo3D extends Cuarteta {
     public Operando3D destino;
     public Operando3D origen;
@@ -20,5 +22,29 @@ public class Casteo3D extends Cuarteta {
         else if (tipoDestino.equals("CARACTER")) casteoC = "(char)";
 
         return destino.obtenerValor() + " = " + casteoC + " " + origen.obtenerValor() + ";\n";
+    }
+
+    @Override
+    public void traducirRiscV(StringBuilder text, TraductorRiscV traductor) {
+        // Cargamos el valor original en t0
+        traductor.cargarOperando(origen, "t0");
+
+        // Aplicamos la conversión según el destino
+        if (tipoDestino.equals("DECIMAL")) {
+            text.append("  fcvt.s.w f0, t0\n");
+            text.append("  fmv.x.w t1, f0\n");
+        }
+        else if (tipoDestino.equals("ENTERO")) {
+            text.append("  fmv.w.x f0, t0\n");
+            text.append("  fcvt.w.s t1, f0, rtz\n");
+        }
+        else if (tipoDestino.equals("CARACTER")) {
+            text.append("  andi t1, t0, 255\n");
+        }
+        else {
+            text.append("  mv t1, t0\n");
+        }
+
+        traductor.guardarEnDestino(destino, "t1");
     }
 }

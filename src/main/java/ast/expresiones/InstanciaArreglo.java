@@ -7,51 +7,59 @@ import cuartetas.Asignacion3D;
 import cuartetas.OperacionBinaria3D;
 import cuartetas.PunteroGlobal3D;
 import cuartetas.SetHeap3D;
+import cuartetas.Literal3D;
 import errores.GestorErrores;
 import errores.TipoError;
 import generador.GeneradorC3D;
 import semantico.TablaSimbolos;
 import semantico.TipoDato;
 
+import java.util.List;
+
 public class InstanciaArreglo extends Expresion {
     public TipoDato tipo;
-    public Expresion tamano;
+    public List<Expresion> dimensiones;
 
-    public InstanciaArreglo(TipoDato tipo, Expresion tamano, int linea, int columna) {
+    public InstanciaArreglo(TipoDato tipo, List<Expresion> dimensiones, int linea, int columna) {
         super(linea, columna);
         this.tipo = tipo;
-        this.tamano = tamano;
+        this.dimensiones = dimensiones;
     }
 
     @Override
     public Object generar(TablaSimbolos entorno) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
+        if (dimensiones == null || dimensiones.isEmpty()) return new ResultadoC3D(null, TipoDato.ERROR);
 
-        ResultadoC3D resTamano = (ResultadoC3D) tamano.generar(entorno);
-        if (resTamano == null || resTamano.tipo != TipoDato.ENTERO) {
-            GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "El tamaño del arreglo debe ser un número entero.", linea, columna
-            );
-            return new ResultadoC3D(null, TipoDato.ERROR);
+        AccesoTemporal t_tamanoTotal = new AccesoTemporal(gen.generarTemporal());
+        gen.agregarCuarteta(new Asignacion3D(t_tamanoTotal, new Literal3D("1")));
+
+        List<ResultadoC3D> resDimensiones = new java.util.ArrayList<>();
+        for (Expresion dim : dimensiones) {
+            ResultadoC3D resDim = (ResultadoC3D) dim.generar(entorno);
+            if (resDim == null || resDim.tipo != TipoDato.ENTERO) return new ResultadoC3D(null, TipoDato.ERROR);
+            resDimensiones.add(resDim);
+            gen.agregarCuarteta(new OperacionBinaria3D(t_tamanoTotal, t_tamanoTotal, "*", resDim.valorC3D));
         }
 
-        // Reservar el puntero base en el Heap (H)
         AccesoTemporal t_refArreglo = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new Asignacion3D(t_refArreglo, new PunteroGlobal3D("H")));
 
-        // Guardar el tamaño del arreglo en Heap[H] (útil para validar límites)
-        gen.agregarCuarteta(new SetHeap3D(new PunteroGlobal3D("H"), resTamano.valorC3D));
+        // Descriptor 1: Número total de dimensiones
+        gen.agregarCuarteta(new SetHeap3D(new PunteroGlobal3D("H"), new Literal3D(String.valueOf(dimensiones.size()))));
+        gen.agregarCuarteta(new OperacionBinaria3D(new PunteroGlobal3D("H"), new PunteroGlobal3D("H"), "+", new Literal3D("1")));
 
-        // Mover el puntero del Heap (H = H + tamano + 1)
-        AccesoTemporal t_nuevoH = new AccesoTemporal(gen.generarTemporal());
-        gen.agregarCuarteta(new OperacionBinaria3D(
-                t_nuevoH, new PunteroGlobal3D("H"), "+", resTamano.valorC3D
-        ));
-        gen.agregarCuarteta(new OperacionBinaria3D(
-                t_nuevoH, t_nuevoH, "+", new cuartetas.Literal3D("1")
-        ));
-        gen.agregarCuarteta(new Asignacion3D(new PunteroGlobal3D("H"), t_nuevoH));
+        // Descriptor 2: Guardar el tamaño de cada dimensión
+        for (ResultadoC3D resDim : resDimensiones) {
+            gen.agregarCuarteta(new SetHeap3D(new PunteroGlobal3D("H"), resDim.valorC3D));
+            gen.agregarCuarteta(new OperacionBinaria3D(new PunteroGlobal3D("H"), new PunteroGlobal3D("H"), "+", new Literal3D("1")));
+        }
 
-        return new ResultadoC3D(t_refArreglo, tipo);
+        // Mover H para reservar el espacio de los datos aplanados
+        gen.agregarCuarteta(new OperacionBinaria3D(new PunteroGlobal3D("H"), new PunteroGlobal3D("H"), "+", t_tamanoTotal));
+
+        ResultadoC3D resFinal = new ResultadoC3D(t_refArreglo, tipo);
+        resFinal.esArreglo = true;
+        return resFinal;
     }
 }

@@ -266,18 +266,6 @@ public interface LenguajeYListener extends ParseTreeListener {
 	 */
 	void exitInstDoWhile(LenguajeYParser.InstDoWhileContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code InstVacia}
-	 * labeled alternative in {@link LenguajeYParser#instruccion}.
-	 * @param ctx the parse tree
-	 */
-	void enterInstVacia(LenguajeYParser.InstVaciaContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code InstVacia}
-	 * labeled alternative in {@link LenguajeYParser#instruccion}.
-	 * @param ctx the parse tree
-	 */
-	void exitInstVacia(LenguajeYParser.InstVaciaContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link LenguajeYParser#declaracionLocal}.
 	 * @param ctx the parse tree
 	 */

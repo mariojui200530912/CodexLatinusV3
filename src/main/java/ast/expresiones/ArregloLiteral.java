@@ -37,11 +37,17 @@ public class ArregloLiteral extends Expresion {
             return new ResultadoC3D(null, TipoDato.ERROR);
         }
 
-        // 1. Guardar el puntero base del Heap (H)
+        // Guardar el puntero base del Heap (H)
         AccesoTemporal t_refArreglo = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new Asignacion3D(t_refArreglo, new PunteroGlobal3D("H")));
 
-        // 2. Guardar el tamaño en Heap[H]
+        // Descriptor 1: Número de dimensiones (1 para este bloque literal directo)
+        gen.agregarCuarteta(new SetHeap3D(new PunteroGlobal3D("H"), new Literal3D("1")));
+        gen.agregarCuarteta(new OperacionBinaria3D(
+                new PunteroGlobal3D("H"), new PunteroGlobal3D("H"), "+", new Literal3D("1")
+        ));
+
+        // Descriptor 2: Tamaño de esta dimensión
         gen.agregarCuarteta(new SetHeap3D(new PunteroGlobal3D("H"), new Literal3D(String.valueOf(elementos.size()))));
         gen.agregarCuarteta(new OperacionBinaria3D(
                 new PunteroGlobal3D("H"), new PunteroGlobal3D("H"), "+", new Literal3D("1")
@@ -50,7 +56,7 @@ public class ArregloLiteral extends Expresion {
         TipoDato tipoArreglo = null;
         String tipoObjeto = null;
 
-        // 3. Evaluar y guardar cada elemento
+        // Evaluar y guardar cada elemento secuencialmente
         for (int i = 0; i < elementos.size(); i++) {
             ResultadoC3D resElemento = (ResultadoC3D) elementos.get(i).generar(entorno);
 

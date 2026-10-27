@@ -58,6 +58,16 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitTipoDato(ZetarianoParser.TipoDatoContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#tipoEstructura}.
+	 * @param ctx the parse tree
+	 */
+	void enterTipoEstructura(ZetarianoParser.TipoEstructuraContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#tipoEstructura}.
+	 * @param ctx the parse tree
+	 */
+	void exitTipoEstructura(ZetarianoParser.TipoEstructuraContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ZetarianoParser#declaracionAtributo}.
 	 * @param ctx the parse tree
 	 */
@@ -206,6 +216,56 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitForStmt(ZetarianoParser.ForStmtContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#whileStmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterWhileStmt(ZetarianoParser.WhileStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#whileStmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitWhileStmt(ZetarianoParser.WhileStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#doWhileStmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterDoWhileStmt(ZetarianoParser.DoWhileStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#doWhileStmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitDoWhileStmt(ZetarianoParser.DoWhileStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#switchStmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterSwitchStmt(ZetarianoParser.SwitchStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#switchStmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitSwitchStmt(ZetarianoParser.SwitchStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#caseCode}.
+	 * @param ctx the parse tree
+	 */
+	void enterCaseCode(ZetarianoParser.CaseCodeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#caseCode}.
+	 * @param ctx the parse tree
+	 */
+	void exitCaseCode(ZetarianoParser.CaseCodeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ZetarianoParser#defaultCode}.
+	 * @param ctx the parse tree
+	 */
+	void enterDefaultCode(ZetarianoParser.DefaultCodeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ZetarianoParser#defaultCode}.
+	 * @param ctx the parse tree
+	 */
+	void exitDefaultCode(ZetarianoParser.DefaultCodeContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ZetarianoParser#argumentos}.
 	 * @param ctx the parse tree
 	 */
@@ -237,6 +297,18 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExprAgrupacion(ZetarianoParser.ExprAgrupacionContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ExprArregloLiteral}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprArregloLiteral(ZetarianoParser.ExprArregloLiteralContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprArregloLiteral}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprArregloLiteral(ZetarianoParser.ExprArregloLiteralContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ExprEntero}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
@@ -310,6 +382,18 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitExprFalse(ZetarianoParser.ExprFalseContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ExprCaracter}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprCaracter(ZetarianoParser.ExprCaracterContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprCaracter}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprCaracter(ZetarianoParser.ExprCaracterContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ExprTrue}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -358,6 +442,18 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitExprAccesoOlamada(ZetarianoParser.ExprAccesoOlamadaContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ExprMultDivMod}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprMultDivMod(ZetarianoParser.ExprMultDivModContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprMultDivMod}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprMultDivMod(ZetarianoParser.ExprMultDivModContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ExprSumaResta}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -394,6 +490,18 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitExprInstanciaArreglo(ZetarianoParser.ExprInstanciaArregloContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ExprTernario}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprTernario(ZetarianoParser.ExprTernarioContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprTernario}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprTernario(ZetarianoParser.ExprTernarioContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ExprOr}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -406,18 +514,6 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 */
 	void exitExprOr(ZetarianoParser.ExprOrContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ExprMultDiv}
-	 * labeled alternative in {@link ZetarianoParser#expresion}.
-	 * @param ctx the parse tree
-	 */
-	void enterExprMultDiv(ZetarianoParser.ExprMultDivContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ExprMultDiv}
-	 * labeled alternative in {@link ZetarianoParser#expresion}.
-	 * @param ctx the parse tree
-	 */
-	void exitExprMultDiv(ZetarianoParser.ExprMultDivContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code ExprNull}
 	 * labeled alternative in {@link ZetarianoParser#expresion}.
 	 * @param ctx the parse tree
@@ -429,4 +525,16 @@ public interface ZetarianoListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExprNull(ZetarianoParser.ExprNullContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ExprReadln}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprReadln(ZetarianoParser.ExprReadlnContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ExprReadln}
+	 * labeled alternative in {@link ZetarianoParser#expresion}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprReadln(ZetarianoParser.ExprReadlnContext ctx);
 }

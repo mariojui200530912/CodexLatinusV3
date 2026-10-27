@@ -163,13 +163,6 @@ public interface LenguajeYVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInstDoWhile(LenguajeYParser.InstDoWhileContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code InstVacia}
-	 * labeled alternative in {@link LenguajeYParser#instruccion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInstVacia(LenguajeYParser.InstVaciaContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link LenguajeYParser#declaracionLocal}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

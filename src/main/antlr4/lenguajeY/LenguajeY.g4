@@ -66,20 +66,20 @@ grammar LenguajeY;
 // REGLAS SINTACTICAS (PARSER)
 // ======================================================
 
-programa: NEWLINE* seccionEstructuras? NEWLINE* seccionFunciones? NEWLINE* EOF;
+programa: NEWLINE? seccionEstructuras? seccionFunciones? EOF;
 
 // --- ESTRUCTURAS ---
 seccionEstructuras: DEF_ESTRUCTURAS NEWLINE (estructuraDef | NEWLINE)*;
 estructuraDef: ESTRUCTURA ID DOSPUNTOS NEWLINE INDENT (atributo | NEWLINE)* DEDENT;
-atributo: tipoDato ID (CORCHETE_A ENTERO CORCHETE_C)? NEWLINE;
+atributo: tipoDato ID (CORCHETE_A ENTERO CORCHETE_C)* NEWLINE; // Soporte multidimensional
 
 // --- FUNCIONES ---
 seccionFunciones: DEF_FUNCIONES NEWLINE (funcionDef | NEWLINE)*;
-funcionDef: DEFINIR ID PAREN_A parametros? PAREN_C (FLECHA tipoDato)? DOSPUNTOS NEWLINE INDENT instruccion* DEDENT;
+
+funcionDef: DEFINIR FUNCION ID PAREN_A parametros? PAREN_C (FLECHA tipoDato)? DOSPUNTOS NEWLINE INDENT (instruccion | NEWLINE)* DEDENT;
 parametros: parametro (COMA parametro)*;
 
-// Reconoce paso por valor, arreglo '[]' y referencia '{}'
-parametro: (CORCHETE_A CORCHETE_C | LLAVE_A LLAVE_C)? tipoDato ID;
+parametro: (CORCHETE_A | LLAVE_A)? tipoDato ID;
 
 // --- TIPOS DE DATO ---
 tipoDato: T_ENTERO | T_CADENA | T_FLOTANTE | T_CARACTER | T_BOOL | ID;
@@ -99,27 +99,25 @@ instruccion: declaracionLocal PUNTOCOMA? NEWLINE                                
            | forStmt                                                                # InstFor
            | whileStmt                                                              # InstWhile
            | doWhileStmt                                                            # InstDoWhile
-           | NEWLINE                                                                # InstVacia
            ;
 
 declaracionLocal: tipoDato ID (CORCHETE_A ENTERO CORCHETE_C)* (IGUAL expresion)?;
 
-// Manejo dinámico de accesos a arreglos y propiedades (ej. b.montos[b.conteo])
 acceso: ID (PUNTO ID | CORCHETE_A expresion CORCHETE_C)*;
 
-ifStmt: SI PAREN_A expresion PAREN_C ENTONCES NEWLINE INDENT instruccion* DEDENT
-        (SINO PAREN_A expresion PAREN_C ENTONCES NEWLINE INDENT instruccion* DEDENT)*
-        (CONTRARIO NEWLINE INDENT instruccion* DEDENT)?;
+ifStmt: SI PAREN_A expresion PAREN_C ENTONCES NEWLINE INDENT (instruccion | NEWLINE)* DEDENT
+        (SINO PAREN_A expresion PAREN_C ENTONCES NEWLINE INDENT (instruccion | NEWLINE)* DEDENT)*
+        (CONTRARIO NEWLINE INDENT (instruccion | NEWLINE)* DEDENT)?;
 
-switchStmt: ELEGIR PAREN_A expresion PAREN_C DOSPUNTOS NEWLINE INDENT casoStmt* defaultStmt? DEDENT;
-casoStmt: CASO expresion DOSPUNTOS NEWLINE INDENT instruccion* DEDENT;
-defaultStmt: SIEMPRE DOSPUNTOS NEWLINE INDENT instruccion* DEDENT;
+switchStmt: ELEGIR PAREN_A expresion PAREN_C LLAVE_A NEWLINE? (casoStmt | defaultStmt | NEWLINE)* LLAVE_C NEWLINE?;
+casoStmt: CASO expresion DOSPUNTOS NEWLINE INDENT? (instruccion | NEWLINE)* DEDENT?;
+defaultStmt: SIEMPRE DOSPUNTOS NEWLINE INDENT? (instruccion | NEWLINE)* DEDENT?;
 
-forStmt: PARA PAREN_A (declaracionLocal | acceso IGUAL expresion) PUNTOCOMA expresion PUNTOCOMA (acceso MAS_MAS | acceso MENOS_MENOS | acceso IGUAL expresion) PAREN_C DOSPUNTOS NEWLINE INDENT instruccion* DEDENT ;
+forStmt: PARA PAREN_A (declaracionLocal | acceso IGUAL expresion) PUNTOCOMA expresion PUNTOCOMA (acceso MAS_MAS | acceso MENOS_MENOS | acceso IGUAL expresion) PAREN_C DOSPUNTOS NEWLINE INDENT (instruccion | NEWLINE)* DEDENT;
 
-whileStmt: MIENTRAS PAREN_A expresion PAREN_C HACER NEWLINE INDENT instruccion* DEDENT;
+whileStmt: MIENTRAS PAREN_A expresion PAREN_C HACER NEWLINE INDENT (instruccion | NEWLINE)* DEDENT;
 
-doWhileStmt: HACER DOSPUNTOS NEWLINE INDENT instruccion* DEDENT MIENTRAS PAREN_A expresion PAREN_C NEWLINE;
+doWhileStmt: HACER DOSPUNTOS NEWLINE INDENT (instruccion | NEWLINE)* DEDENT MIENTRAS PAREN_A expresion PAREN_C NEWLINE?;
 
 argumentos: expresion (COMA expresion)*;
 
@@ -152,6 +150,7 @@ DEF_ESTRUCTURAS : '%estructuras';
 DEF_FUNCIONES   : '%funciones';
 ESTRUCTURA      : 'estructura';
 DEFINIR         : 'definir';
+FUNCION         : 'funcion'; // CORRECCIÓN: Token faltante
 RETORNAR        : 'retornar';
 ROMPER          : 'romper';
 SI              : 'si';

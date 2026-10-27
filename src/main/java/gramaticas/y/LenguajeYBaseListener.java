@@ -293,18 +293,6 @@ public class LenguajeYBaseListener implements LenguajeYListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInstVacia(LenguajeYParser.InstVaciaContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitInstVacia(LenguajeYParser.InstVaciaContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterDeclaracionLocal(LenguajeYParser.DeclaracionLocalContext ctx) { }
 	/**
 	 * {@inheritDoc}

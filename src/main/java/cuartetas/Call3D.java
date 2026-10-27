@@ -1,5 +1,7 @@
 package cuartetas;
 
+import generador.TraductorRiscV;
+
 public class Call3D extends Cuarteta {
     public String nombreFuncion;
 
@@ -10,5 +12,10 @@ public class Call3D extends Cuarteta {
     @Override
     public String generarCodigo() {
         return nombreFuncion + "();\n";
+    }
+
+    @Override
+    public void traducirRiscV(StringBuilder text, TraductorRiscV traductor) {
+        text.append("  jal ").append(nombreFuncion).append("\n");
     }
 }

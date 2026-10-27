@@ -34,7 +34,7 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         return programa;
     }
 
-    // --- ESTRUCTURAS (Se mapean como Clases) ---
+    // --- ESTRUCTURAS ---
 
     @Override
     public Object visitSeccionEstructuras(LenguajeYParser.SeccionEstructurasContext ctx) {
@@ -70,9 +70,10 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
 
         String id = ctx.ID().getText();
-        boolean esArreglo = ctx.CORCHETE_A() != null;
 
-        return new DeclaracionAtributo("public", tipo, tipoObj, id, esArreglo, linea, col);
+        boolean esArreglo = !ctx.CORCHETE_A().isEmpty();
+
+        return new DeclaracionAtributo("public", tipo, tipoObj, id, esArreglo, null, linea, col);
     }
 
     // --- FUNCIONES ---
@@ -93,7 +94,6 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
 
         String idFuncion = ctx.ID().getText();
 
-        // Tipo de retorno (si no hay flecha '->', es void por defecto)
         String tipoRetornoStr = (ctx.FLECHA() != null) ? ctx.tipoDato().getText() : "void";
         TipoDato tipoRetorno = ValidadorTipos.parsearTipo(tipoRetornoStr);
         String tipoObjeto = (tipoRetorno == TipoDato.OBJETO) ? tipoRetornoStr : null;
@@ -106,9 +106,7 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         List<Instruccion> bloque = new ArrayList<>();
         for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
             Instruccion inst = (Instruccion) visit(instCtx);
-            if (inst != null) {
-                bloque.add(inst);
-            }
+            if (inst != null) bloque.add(inst);
         }
 
         return new DefinicionFuncion(idFuncion, tipoRetorno, tipoObjeto, parametros, bloque, linea, col);
@@ -118,17 +116,22 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
     public Object visitParametros(LenguajeYParser.ParametrosContext ctx) {
         List<DefinicionFuncion.ParametroFormal> lista = new ArrayList<>();
         for (LenguajeYParser.ParametroContext paramCtx : ctx.parametro()) {
-            String tipoStr = paramCtx.tipoDato().getText();
-            TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
-            String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
-            String id = paramCtx.ID().getText();
-
-            lista.add(new DefinicionFuncion.ParametroFormal(tipo, tipoObj, id));
+            lista.add((DefinicionFuncion.ParametroFormal) visit(paramCtx));
         }
         return lista;
     }
 
-    // --- INSTRUCCIONES ---
+    @Override
+    public Object visitParametro(LenguajeYParser.ParametroContext paramCtx) {
+        String tipoStr = paramCtx.tipoDato().getText();
+        TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
+        String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
+        String id = paramCtx.ID().getText();
+
+        return new DefinicionFuncion.ParametroFormal(tipo, tipoObj, id);
+    }
+
+    // --- INSTRUCCIONES BÁSICAS ---
 
     @Override
     public Object visitInstDeclaracion(LenguajeYParser.InstDeclaracionContext ctx) {
@@ -177,10 +180,7 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
     public Object visitInstLlamada(LenguajeYParser.InstLlamadaContext ctx) {
         String idFuncion = ctx.ID().getText();
         List<Expresion> args = new ArrayList<>();
-        if (ctx.argumentos() != null) {
-            args = (List<Expresion>) visit(ctx.argumentos());
-        }
-
+        if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
         return new LlamadaFuncion(idFuncion, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
@@ -210,55 +210,116 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
 
         List<Instruccion> impresiones = new ArrayList<>();
         for (Expresion arg : args) {
-            impresiones.add(new Imprimir(arg, true, linea, col));
+            impresiones.add(new Imprimir(arg, true, linea, col)); // Por defecto println
         }
 
-        if (impresiones.size() == 1) return impresiones.get(0);
-
-        return impresiones;
+        return impresiones.size() == 1 ? impresiones.get(0) : impresiones;
     }
 
     // --- CONTROL DE FLUJO ---
 
     @Override
-    public Object visitInstIf(LenguajeYParser.InstIfContext ctx) {
-        return visit(ctx.ifStmt());
-    }
+    public Object visitInstIf(LenguajeYParser.InstIfContext ctx) { return visit(ctx.ifStmt()); }
+    @Override
+    public Object visitInstSwitch(LenguajeYParser.InstSwitchContext ctx) { return visit(ctx.switchStmt()); }
+    @Override
+    public Object visitInstFor(LenguajeYParser.InstForContext ctx) { return visit(ctx.forStmt()); }
+    @Override
+    public Object visitInstWhile(LenguajeYParser.InstWhileContext ctx) { return visit(ctx.whileStmt()); }
+    @Override
+    public Object visitInstDoWhile(LenguajeYParser.InstDoWhileContext ctx) { return visit(ctx.doWhileStmt()); }
 
     @Override
     public Object visitIfStmt(LenguajeYParser.IfStmtContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
-        // Resolver el bloque CONTRARIO (else) si existe
-        List<Instruccion> bloqueFalsoFinal = new ArrayList<>();
-        if (ctx.CONTRARIO() != null) {
-            // La instrucción del CONTRARIO es la última de la lista generada
-            bloqueFalsoFinal.add((Instruccion) visit(ctx.instruccion(ctx.instruccion().size() - 1)));
+        List<Instruccion> bloqueActual = new ArrayList<>();
+        List<Instruccion> bloqueVerdadero = new ArrayList<>();
+        List<List<Instruccion>> bloquesSino = new ArrayList<>();
+        List<Instruccion> bloqueContrario = new ArrayList<>();
+        List<Expresion> condicionesSino = new ArrayList<>();
+
+        int estado = 0; // 0 = SI, 1 = SINO, 2 = CONTRARIO
+
+        // Escaneo lineal para agrupar las instrucciones dispersas de la gramática
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            ParseTree hijo = ctx.getChild(i);
+            String texto = hijo.getText();
+
+            if (texto.equals("si")) {
+                estado = 0;
+            } else if (texto.equals("sino")) {
+                if (estado == 0) bloqueVerdadero = new ArrayList<>(bloqueActual);
+                else if (estado == 1) bloquesSino.add(new ArrayList<>(bloqueActual));
+                bloqueActual.clear();
+                estado = 1;
+            } else if (texto.equals("contrario")) {
+                if (estado == 0) bloqueVerdadero = new ArrayList<>(bloqueActual);
+                else if (estado == 1) bloquesSino.add(new ArrayList<>(bloqueActual));
+                bloqueActual.clear();
+                estado = 2;
+            } else if (hijo instanceof LenguajeYParser.InstruccionContext) {
+                Instruccion inst = (Instruccion) visit(hijo);
+                if (inst != null) bloqueActual.add(inst);
+            }
+        }
+
+        if (estado == 0) bloqueVerdadero = new ArrayList<>(bloqueActual);
+        else if (estado == 1) bloquesSino.add(new ArrayList<>(bloqueActual));
+        else if (estado == 2) bloqueContrario = new ArrayList<>(bloqueActual);
+
+        Expresion condPrincipal = (Expresion) visit(ctx.expresion(0));
+        for (int i = 1; i < ctx.expresion().size(); i++) {
+            condicionesSino.add((Expresion) visit(ctx.expresion(i)));
         }
 
         NodoIf ifActual = null;
-        int numSinos = ctx.SINO().size();
-
-        // Construir la cadena de SINO (else if) de ABAJO hacia ARRIBA
-        for (int i = numSinos; i >= 1; i--) {
-            Expresion condSino = (Expresion) visit(ctx.expresion(i));
-            List<Instruccion> bloqueSino = new ArrayList<>();
-            bloqueSino.add((Instruccion) visit(ctx.instruccion(i)));
-
-            List<Instruccion> falsoDeEsteSino = (ifActual != null) ? Arrays.asList(ifActual) : bloqueFalsoFinal;
-
-            ifActual = new NodoIf(condSino, bloqueSino, falsoDeEsteSino, linea, col);
+        for (int i = bloquesSino.size() - 1; i >= 0; i--) {
+            List<Instruccion> falsoDeEste = (ifActual != null) ? Arrays.asList(ifActual) : bloqueContrario;
+            ifActual = new NodoIf(condicionesSino.get(i), bloquesSino.get(i), falsoDeEste, linea, col);
         }
 
-        // Unir con el SI principal (if)
-        Expresion condPrincipal = (Expresion) visit(ctx.expresion(0));
-        List<Instruccion> bloqueVerdadero = new ArrayList<>();
-        bloqueVerdadero.add((Instruccion) visit(ctx.instruccion(0)));
-
-        List<Instruccion> falsoPrincipal = (ifActual != null) ? Arrays.asList(ifActual) : bloqueFalsoFinal;
-
+        List<Instruccion> falsoPrincipal = (ifActual != null) ? Arrays.asList(ifActual) : bloqueContrario;
         return new NodoIf(condPrincipal, bloqueVerdadero, falsoPrincipal, linea, col);
+    }
+
+    @Override
+    public Object visitSwitchStmt(LenguajeYParser.SwitchStmtContext ctx) {
+        Expresion expresionEvaluar = (Expresion) visit(ctx.expresion());
+        List<NodoCaso> casos = new ArrayList<>();
+
+        for (LenguajeYParser.CasoStmtContext caseCtx : ctx.casoStmt()) {
+            casos.add((NodoCaso) visit(caseCtx));
+        }
+
+        List<Instruccion> bloqueDefault = null;
+        if (!ctx.defaultStmt().isEmpty()) {
+            bloqueDefault = (List<Instruccion>) visit(ctx.defaultStmt(0));
+        }
+
+        return new NodoSwitch(expresionEvaluar, casos, bloqueDefault, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitCasoStmt(LenguajeYParser.CasoStmtContext ctx) {
+        Expresion valorCaso = (Expresion) visit(ctx.expresion());
+        List<Instruccion> instrucciones = new ArrayList<>();
+        for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
+            Instruccion inst = (Instruccion) visit(instCtx);
+            if (inst != null) instrucciones.add(inst);
+        }
+        return new NodoCaso(valorCaso, instrucciones, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitDefaultStmt(LenguajeYParser.DefaultStmtContext ctx) {
+        List<Instruccion> instrucciones = new ArrayList<>();
+        for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
+            Instruccion inst = (Instruccion) visit(instCtx);
+            if (inst != null) instrucciones.add(inst);
+        }
+        return instrucciones;
     }
 
     @Override
@@ -266,30 +327,33 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
-        Instruccion inicializacion = (ctx.declaracionLocal() != null)
-                ? (Instruccion) visit(ctx.declaracionLocal())
-                : new Asignacion((Expresion) visit(ctx.acceso(0)), (Expresion) visit(ctx.expresion(0)), linea, col);
+        Instruccion inicializacion;
+        if (ctx.declaracionLocal() != null) {
+            inicializacion = (Instruccion) visit(ctx.declaracionLocal());
+        } else {
+            Expresion destino = (Expresion) visit(ctx.acceso(0));
+            Expresion valor = (Expresion) visit(ctx.expresion(0));
+            inicializacion = new Asignacion(destino, valor, linea, col);
+        }
 
         Expresion condicion = (Expresion) visit(ctx.expresion(ctx.declaracionLocal() != null ? 0 : 1));
 
         Instruccion actualizacion;
-        // Identificar el tipo de actualización: i++, i--, o i=x
+        Expresion destActualizacion = (Expresion) visit(ctx.acceso(ctx.acceso().size() - 1));
+
         if (ctx.MAS_MAS() != null) {
-            actualizacion = new NodoIncrementoDecremento((Expresion) visit(ctx.acceso(ctx.acceso().size()-1)), "++", linea, col);
+            actualizacion = new NodoIncrementoDecremento(destActualizacion, "++", linea, col);
         } else if (ctx.MENOS_MENOS() != null) {
-            actualizacion = new NodoIncrementoDecremento((Expresion) visit(ctx.acceso(ctx.acceso().size()-1)), "--", linea, col);
+            actualizacion = new NodoIncrementoDecremento(destActualizacion, "--", linea, col);
         } else {
-            Expresion destino = (Expresion) visit(ctx.acceso(ctx.acceso().size()-1));
-            Expresion valor = (Expresion) visit(ctx.expresion(ctx.expresion().size()-1));
-            actualizacion = new Asignacion(destino, valor, linea, col);
+            Expresion valorAct = (Expresion) visit(ctx.expresion(ctx.expresion().size() - 1));
+            actualizacion = new Asignacion(destActualizacion, valorAct, linea, col);
         }
 
         List<Instruccion> bloque = new ArrayList<>();
         for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
             Instruccion inst = (Instruccion) visit(instCtx);
-            if (inst != null) {
-                bloque.add(inst);
-            }
+            if (inst != null) bloque.add(inst);
         }
 
         return new NodoPara(inicializacion, condicion, actualizacion, bloque, linea, col);
@@ -301,15 +365,23 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         List<Instruccion> bloque = new ArrayList<>();
         for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
             Instruccion inst = (Instruccion) visit(instCtx);
-            if (inst != null) {
-                bloque.add(inst);
-            }
+            if (inst != null) bloque.add(inst);
         }
-
         return new NodoMientras(condicion, bloque, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
-    // --- ACCESO A VARIABLES, ARREGLOS Y PROPIEDADES ---
+    @Override
+    public Object visitDoWhileStmt(LenguajeYParser.DoWhileStmtContext ctx) {
+        Expresion condicion = (Expresion) visit(ctx.expresion());
+        List<Instruccion> bloque = new ArrayList<>();
+        for (LenguajeYParser.InstruccionContext instCtx : ctx.instruccion()) {
+            Instruccion inst = (Instruccion) visit(instCtx);
+            if (inst != null) bloque.add(inst);
+        }
+        return new NodoHacerMientras(bloque, condicion, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    // --- ACCESO Y EXPRESIONES ---
 
     @Override
     public Object visitAcceso(LenguajeYParser.AccesoContext ctx) {
@@ -330,7 +402,16 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
                 actual = new AccesoPropiedad(actual, prop, linea, col);
             } else if (texto.equals("[")) {
                 Expresion indice = (Expresion) visit(ctx.expresion(exprIndex++));
-                actual = new AccesoArreglo(actual, indice, linea, col);
+
+                if (actual instanceof AccesoArreglo) {
+                    // Agrupar índices contiguos en el mismo nodo
+                    ((AccesoArreglo) actual).indices.add(indice);
+                } else {
+                    // Primer índice: crear el nodo
+                    List<Expresion> listaIndices = new ArrayList<>();
+                    listaIndices.add(indice);
+                    actual = new AccesoArreglo(actual, listaIndices, linea, col);
+                }
             }
         }
         return actual;
@@ -344,8 +425,6 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         }
         return args;
     }
-
-    // --- EXPRESIONES BÁSICAS ---
 
     @Override
     public Object visitExprSumaResta(LenguajeYParser.ExprSumaRestaContext ctx) {
@@ -404,16 +483,18 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         String idFuncion = ctx.ID().getText();
         List<Expresion> args = new ArrayList<>();
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
-
         return new LlamadaFuncion(idFuncion, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitExprLeer(LenguajeYParser.ExprLeerContext ctx) {
+        return new LlamadaFuncion("leer", new ArrayList<>(), ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
     public Object visitExprInstanciaEstructura(LenguajeYParser.ExprInstanciaEstructuraContext ctx) {
         List<Expresion> elementos = new ArrayList<>();
         if (ctx.argumentos() != null) elementos = (List<Expresion>) visit(ctx.argumentos());
-
-        // En C3D, { 1, 2, 3 } lo manejamos exactamente igual que un arreglo literal en el Heap
         return new ArregloLiteral(elementos, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 

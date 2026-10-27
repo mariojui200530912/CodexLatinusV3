@@ -6,7 +6,7 @@ import ast.expresiones.*;
 import ast.instrucciones.*;
 import ast.instrucciones.NodoIncrementoDecremento;
 import gramaticas.zetariano.ZetarianoBaseVisitor;
-import gramaticas.zetariano.ZetarianoParser;
+import gramaticas.zetariano.ZetarianoParser.*;
 import semantico.TipoDato;
 import semantico.ValidadorTipos;
 
@@ -19,16 +19,16 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     // --- PROGRAMA Y CLASES ---
 
     @Override
-    public Object visitPrograma(ZetarianoParser.ProgramaContext ctx) {
+    public Object visitPrograma(ProgramaContext ctx) {
         List<Instruccion> clases = new ArrayList<>();
-        for (ZetarianoParser.DefinicionClaseContext claseCtx : ctx.definicionClase()) {
+        for (DefinicionClaseContext claseCtx : ctx.definicionClase()) {
             clases.add((Instruccion) visit(claseCtx));
         }
         return clases;
     }
 
     @Override
-    public Object visitDefinicionClase(ZetarianoParser.DefinicionClaseContext ctx) {
+    public Object visitDefinicionClase(DefinicionClaseContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -38,7 +38,7 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         String idPadre = (ctx.EXTENDS() != null) ? ctx.ID(1).getText() : null;
 
         List<Instruccion> instrucciones = new ArrayList<>();
-        for (ZetarianoParser.MiembroClaseContext miembroCtx : ctx.miembroClase()) {
+        for (MiembroClaseContext miembroCtx : ctx.miembroClase()) {
             Instruccion inst = (Instruccion) visit(miembroCtx);
             if (inst != null) instrucciones.add(inst);
         }
@@ -47,23 +47,32 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitDeclaracionAtributo(ZetarianoParser.DeclaracionAtributoContext ctx) {
+    public Object visitDeclaracionAtributo(DeclaracionAtributoContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
         String visibilidad = (ctx.modificadorAcceso() != null) ? ctx.modificadorAcceso().getText() : "default";
-        String tipoStr = ctx.tipoDato().getText();
+
+        TipoEstructuraContext tipoStructCtx = ctx.tipoEstructura();
+        String tipoStr = tipoStructCtx.tipoDato().getText();
         TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
         String tipoObjeto = (tipo == TipoDato.OBJETO) ? tipoStr : null;
 
         String id = ctx.ID().getText();
-        boolean esArreglo = ctx.CORCHETE_A() != null;
 
-        return new DeclaracionAtributo(visibilidad, tipo, tipoObjeto, id, esArreglo, linea, col);
+        // Validar si tiene corchetes para marcarlo como arreglo
+        boolean esArreglo = tipoStructCtx.CORCHETE_A() != null && !tipoStructCtx.CORCHETE_A().isEmpty();
+
+        Expresion valor = null;
+        if (ctx.expresion() != null) {
+            valor = (Expresion) visit(ctx.expresion());
+        }
+
+        return new DeclaracionAtributo(visibilidad, tipo, tipoObjeto, id, esArreglo, valor, linea, col);
     }
 
     @Override
-    public Object visitConstructor(ZetarianoParser.ConstructorContext ctx) {
+    public Object visitConstructor(ConstructorContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -81,13 +90,13 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitDefinicionMetodo(ZetarianoParser.DefinicionMetodoContext ctx) {
+    public Object visitDefinicionMetodo(DefinicionMetodoContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
         String visibilidad = (ctx.modificadorAcceso() != null) ? ctx.modificadorAcceso().getText() : "default";
 
-        String tipoRetornoStr = (ctx.VOID() != null) ? "void" : ctx.tipoDato().getText();
+        String tipoRetornoStr = (ctx.VOID() != null) ? "void" : ctx.tipoEstructura().getText();
         TipoDato tipoRetorno = ValidadorTipos.parsearTipo(tipoRetornoStr);
         String tipoObjeto = (tipoRetorno == TipoDato.OBJETO) ? tipoRetornoStr : null;
 
@@ -106,17 +115,17 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     // --- PARÁMETROS Y BLOQUES ---
 
     @Override
-    public Object visitParametros(ZetarianoParser.ParametrosContext ctx) {
+    public Object visitParametros(ParametrosContext ctx) {
         List<DefinicionFuncion.ParametroFormal> lista = new ArrayList<>();
-        for (ZetarianoParser.ParametroContext paramCtx : ctx.parametro()) {
+        for (ParametroContext paramCtx : ctx.parametro()) {
             lista.add((DefinicionFuncion.ParametroFormal) visit(paramCtx));
         }
         return lista;
     }
 
     @Override
-    public Object visitParametro(ZetarianoParser.ParametroContext ctx) {
-        String tipoStr = ctx.tipoDato().getText();
+    public Object visitParametro(ParametroContext ctx) {
+        String tipoStr = ctx.tipoEstructura().getText();
         TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
         String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
         String id = ctx.ID().getText();
@@ -124,9 +133,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitBloque(ZetarianoParser.BloqueContext ctx) {
+    public Object visitBloque(BloqueContext ctx) {
         List<Instruccion> instrucciones = new ArrayList<>();
-        for (ZetarianoParser.InstruccionContext instCtx : ctx.instruccion()) {
+        for (InstruccionContext instCtx : ctx.instruccion()) {
             Instruccion inst = (Instruccion) visit(instCtx);
             if (inst != null) instrucciones.add(inst);
         }
@@ -136,38 +145,47 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     // --- INSTRUCCIONES BÁSICAS Y CONTROL DE FLUJO ---
 
     @Override
-    public Object visitInstruccion(ZetarianoParser.InstruccionContext ctx) {
+    public Object visitInstruccion(InstruccionContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
         if (ctx.PRINTLN() != null) {
-            Expresion valor = (Expresion) visit(ctx.expresion());
-            return new Imprimir(valor, true, linea, col);
+            return new Imprimir((Expresion) visit(ctx.expresion()), true, linea, col);
+        } else if (ctx.PRINT() != null) {
+            return new Imprimir((Expresion) visit(ctx.expresion()), false, linea, col);
         } else if (ctx.RETURN() != null) {
             Expresion valor = (ctx.expresion() != null) ? (Expresion) visit(ctx.expresion()) : null;
             return new NodoRetornar(valor, linea, col);
+        } else if (ctx.BREAK() != null) {
+            return new NodoBreak(linea, col);
+        } else if (ctx.CONTINUE() != null) {
+            return new NodoContinue(linea, col);
+        } else if (ctx.READLN() != null) {
+            return new LlamadaFuncion("readln", new ArrayList<>(), linea, col); // readln como instrucción
         }
-
         return visitChildren(ctx);
     }
 
     @Override
-    public Object visitDeclaracionLocal(ZetarianoParser.DeclaracionLocalContext ctx) {
+    public Object visitDeclaracionLocal(DeclaracionLocalContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
-        String tipoStr = ctx.tipoDato().getText();
+        String tipoStr = ctx.tipoEstructura().getText();
         TipoDato tipo = ValidadorTipos.parsearTipo(tipoStr);
         String tipoObj = (tipo == TipoDato.OBJETO) ? tipoStr : null;
 
         String id = ctx.ID().getText();
-        Expresion valor = (Expresion) visit(ctx.expresion());
+        Expresion valor = null;
+        if (ctx.expresion() != null) {
+            valor = (Expresion) visit(ctx.expresion());
+        }
 
         return new Declaracion(id, tipo, tipoObj, valor, linea, col);
     }
 
     @Override
-    public Object visitIfStmt(ZetarianoParser.IfStmtContext ctx) {
+    public Object visitIfStmt(IfStmtContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -185,19 +203,45 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitForStmt(ZetarianoParser.ForStmtContext ctx) {
+    public Object visitForStmt(ForStmtContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
         Instruccion inicializacion = null;
-        if (ctx.declaracionLocal() != null) inicializacion = (Instruccion) visit(ctx.declaracionLocal());
-        else if (ctx.asignacionOMetodo(0) != null) inicializacion = (Instruccion) visit(ctx.asignacionOMetodo(0));
+        Expresion condicion = null;
+        Instruccion actualizacion = null;
 
-        Expresion condicion = (Expresion) visit(ctx.expresion());
+        // Buscar los índices de los PUNTOCOMA para delimitar las secciones
+        int primerPuntoComa = -1;
+        int segundoPuntoComa = -1;
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            if (ctx.getChild(i).getText().equals(";")) {
+                if (primerPuntoComa == -1) primerPuntoComa = i;
+                else segundoPuntoComa = i;
+            }
+        }
 
-        Instruccion actualizacion = (ctx.asignacionOMetodo().size() > 1)
-                ? (Instruccion) visit(ctx.asignacionOMetodo(1))
-                : (Instruccion) visit(ctx.asignacionOMetodo(0));
+        // Identificar Inicialización
+        if (ctx.declaracionLocal() != null) {
+            inicializacion = (Instruccion) visit(ctx.declaracionLocal());
+        } else if (!ctx.asignacionOMetodo().isEmpty()) {
+            ParseTree posibleInit = ctx.asignacionOMetodo(0);
+            if (ctx.children.indexOf(posibleInit) < primerPuntoComa) {
+                inicializacion = (Instruccion) visit(posibleInit);
+            }
+        }
+
+        // Identificar Condición
+        if (ctx.expresion() != null) {
+            condicion = (Expresion) visit(ctx.expresion());
+        }
+
+        // Identificar Actualización
+        for (AsignacionOMetodoContext asigCtx : ctx.asignacionOMetodo()) {
+            if (ctx.children.indexOf(asigCtx) > segundoPuntoComa) {
+                actualizacion = (Instruccion) visit(asigCtx);
+            }
+        }
 
         List<Instruccion> bloque = new ArrayList<>();
         bloque.add((Instruccion) visit(ctx.instruccion()));
@@ -206,7 +250,7 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitInstAsignacion(ZetarianoParser.InstAsignacionContext ctx) {
+    public Object visitInstAsignacion(InstAsignacionContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -215,7 +259,7 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
 
         String operador = ctx.getChild(1).getText();
         if (!operador.equals("=")) {
-            String opBinario = operador.equals("+=") ? "+" : "-";
+            String opBinario = operador.equals("+=") ? "+" : (operador.equals("-=") ? "-" : "*");
             valor = new OperacionBinaria(destino, valor, opBinario, linea, col);
         }
 
@@ -223,19 +267,19 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitInstIncremento(ZetarianoParser.InstIncrementoContext ctx) {
+    public Object visitInstIncremento(InstIncrementoContext ctx) {
         Expresion destino = (Expresion) visit(ctx.acceso());
         return new NodoIncrementoDecremento(destino, "++", ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitInstDecremento(ZetarianoParser.InstDecrementoContext ctx) {
+    public Object visitInstDecremento(InstDecrementoContext ctx) {
         Expresion destino = (Expresion) visit(ctx.acceso());
         return new NodoIncrementoDecremento(destino, "--", ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitInstLlamada(ZetarianoParser.InstLlamadaContext ctx) {
+    public Object visitInstLlamada(InstLlamadaContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -255,10 +299,56 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         return null;
     }
 
+    @Override
+    public Object visitWhileStmt(WhileStmtContext ctx) {
+        Expresion condicion = (Expresion) visit(ctx.expresion());
+        List<Instruccion> bloque = new ArrayList<>();
+        bloque.add((Instruccion) visit(ctx.instruccion()));
+        return new NodoMientras(condicion, bloque, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitDoWhileStmt(DoWhileStmtContext ctx) {
+        Expresion condicion = (Expresion) visit(ctx.expresion());
+        List<Instruccion> bloque = new ArrayList<>();
+        bloque.add((Instruccion) visit(ctx.instruccion()));
+        return new NodoHacerMientras(bloque, condicion, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitSwitchStmt(SwitchStmtContext ctx) {
+        Expresion expresionEvaluar = (Expresion) visit(ctx.expresion());
+        List<NodoCaso> casos = new ArrayList<>();
+        for (CaseCodeContext caseCtx : ctx.caseCode()) {
+            casos.add((NodoCaso) visit(caseCtx));
+        }
+        List<Instruccion> bloqueDefault = ctx.defaultCode() != null ? (List<Instruccion>) visit(ctx.defaultCode()) : null;
+        return new NodoSwitch(expresionEvaluar, casos, bloqueDefault, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitCaseCode(CaseCodeContext ctx) {
+        Expresion valorCaso = (Expresion) visit(ctx.expresion());
+        List<Instruccion> instrucciones = new ArrayList<>();
+        for (InstruccionContext instCtx : ctx.instruccion()) {
+            instrucciones.add((Instruccion) visit(instCtx));
+        }
+        return new NodoCaso(valorCaso, instrucciones, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitDefaultCode(DefaultCodeContext ctx) {
+        List<Instruccion> instrucciones = new ArrayList<>();
+        for (InstruccionContext instCtx : ctx.instruccion()) {
+            instrucciones.add((Instruccion) visit(instCtx));
+        }
+        return instrucciones;
+    }
+
     // --- ACCESO A VARIABLES, PROPIEDADES Y ARREGLOS ---
 
     @Override
-    public Object visitAcceso(ZetarianoParser.AccesoContext ctx) {
+    public Object visitAcceso(AccesoContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -268,6 +358,11 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
             ParseTree hijo = ctx.getChild(i);
             String texto = hijo.getText();
 
+            // Ignorar tokens de puntuación sueltos, la lógica recae en los operandos
+            if (texto.equals(".") || texto.equals("[") || texto.equals("]")) {
+                continue;
+            }
+
             if (texto.equals("this")) {
                 actual = new AccesoVariable("this", linea, col);
             } else if (hijo instanceof org.antlr.v4.runtime.tree.TerminalNode && texto.matches("[a-zA-Z_$][a-zA-Z0-9_$]*")) {
@@ -276,18 +371,27 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
                 } else {
                     actual = new AccesoPropiedad(actual, texto, linea, col);
                 }
-            } else if (hijo instanceof ZetarianoParser.ExpresionContext) {
+            } else if (hijo instanceof ExpresionContext) {
                 Expresion indice = (Expresion) visit(hijo);
-                actual = new AccesoArreglo(actual, indice, linea, col);
+
+                if (actual instanceof AccesoArreglo) {
+                    // Agrupar índices contiguos en la lista del nodo existente (ej. matriz[1][2])
+                    ((AccesoArreglo) actual).indices.add(indice);
+                } else {
+                    // Primer índice: crear el nodo instanciando la lista
+                    List<Expresion> listaIndices = new ArrayList<>();
+                    listaIndices.add(indice);
+                    actual = new AccesoArreglo(actual, listaIndices, linea, col);
+                }
             }
         }
         return actual;
     }
 
     @Override
-    public Object visitArgumentos(ZetarianoParser.ArgumentosContext ctx) {
+    public Object visitArgumentos(ArgumentosContext ctx) {
         List<Expresion> args = new ArrayList<>();
-        for (ZetarianoParser.ExpresionContext exprCtx : ctx.expresion()) {
+        for (ExpresionContext exprCtx : ctx.expresion()) {
             args.add((Expresion) visit(exprCtx));
         }
         return args;
@@ -296,19 +400,31 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     // --- EXPRESIONES ---
 
     @Override
-    public Object visitExprAgrupacion(ZetarianoParser.ExprAgrupacionContext ctx) {
+    public Object visitExprAgrupacion(ExprAgrupacionContext ctx) {
         return visit(ctx.expresion());
     }
 
     @Override
-    public Object visitExprInstanciaArreglo(ZetarianoParser.ExprInstanciaArregloContext ctx) {
-        TipoDato tipo = ValidadorTipos.parsearTipo(ctx.tipoDato().getText());
-        Expresion tamano = (Expresion) visit(ctx.expresion());
-        return new InstanciaArreglo(tipo, tamano, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    public Object visitExprArregloLiteral(ExprArregloLiteralContext ctx) {
+        List<Expresion> valores = new ArrayList<>();
+        for (ExpresionContext exprCtx : ctx.expresion()) {
+            valores.add((Expresion) visit(exprCtx));
+        }
+        return new ArregloLiteral(valores, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprInstanciaObjeto(ZetarianoParser.ExprInstanciaObjetoContext ctx) {
+    public Object visitExprInstanciaArreglo(ExprInstanciaArregloContext ctx) {
+        TipoDato tipo = ValidadorTipos.parsearTipo(ctx.tipoDato().getText());
+        List<Expresion> dimensiones = new ArrayList<>();
+        for (ExpresionContext exprCtx : ctx.expresion()) {
+            dimensiones.add((Expresion) visit(exprCtx));
+        }
+        return new InstanciaArreglo(tipo, dimensiones, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitExprInstanciaObjeto(ExprInstanciaObjetoContext ctx) {
         String idClase = ctx.ID().getText();
         List<Expresion> args = new ArrayList<>();
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
@@ -316,38 +432,58 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitExprNot(ZetarianoParser.ExprNotContext ctx) {
+    public Object visitExprNot(ExprNotContext ctx) {
         Expresion expr = (Expresion) visit(ctx.expresion());
         return new OperacionUnaria(expr, "!", ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprMultDiv(ZetarianoParser.ExprMultDivContext ctx) {
+    public Object visitExprMultDivMod(ExprMultDivModContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
     @Override
-    public Object visitExprSumaResta(ZetarianoParser.ExprSumaRestaContext ctx) {
+    public Object visitExprReadln(ExprReadlnContext ctx) {
+        return new LlamadaFuncion("readln", new ArrayList<>(), ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitExprCaracter(ExprCaracterContext ctx) {
+        String str = ctx.getText();
+        String valor = str.substring(1, str.length() - 1);
+        return new Primitivo(valor, TipoDato.CARACTER, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitExprTernario(ExprTernarioContext ctx) {
+        Expresion condicion = (Expresion) visit(ctx.expresion(0));
+        Expresion verdadero = (Expresion) visit(ctx.expresion(1));
+        Expresion falso = (Expresion) visit(ctx.expresion(2));
+        return new OperadorTernario(condicion, verdadero, falso, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
+
+    @Override
+    public Object visitExprSumaResta(ExprSumaRestaContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
     @Override
-    public Object visitExprRelacional(ZetarianoParser.ExprRelacionalContext ctx) {
+    public Object visitExprRelacional(ExprRelacionalContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
     @Override
-    public Object visitExprIgualdad(ZetarianoParser.ExprIgualdadContext ctx) {
+    public Object visitExprIgualdad(ExprIgualdadContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
     @Override
-    public Object visitExprAnd(ZetarianoParser.ExprAndContext ctx) {
+    public Object visitExprAnd(ExprAndContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
     @Override
-    public Object visitExprOr(ZetarianoParser.ExprOrContext ctx) {
+    public Object visitExprOr(ExprOrContext ctx) {
         return crearBinaria(ctx.expresion(0), ctx.expresion(1), ctx.getChild(1).getText(), ctx);
     }
 
@@ -358,7 +494,7 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitExprAccesoOlamada(ZetarianoParser.ExprAccesoOlamadaContext ctx) {
+    public Object visitExprAccesoOlamada(ExprAccesoOlamadaContext ctx) {
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -382,34 +518,34 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     // --- PRIMITIVOS ---
 
     @Override
-    public Object visitExprEntero(ZetarianoParser.ExprEnteroContext ctx) {
+    public Object visitExprEntero(ExprEnteroContext ctx) {
         return new Primitivo(Integer.parseInt(ctx.getText()), TipoDato.ENTERO, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprDouble(ZetarianoParser.ExprDoubleContext ctx) {
+    public Object visitExprDouble(ExprDoubleContext ctx) {
         return new Primitivo(Double.parseDouble(ctx.getText()), TipoDato.DECIMAL, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprCadena(ZetarianoParser.ExprCadenaContext ctx) {
+    public Object visitExprCadena(ExprCadenaContext ctx) {
         String stringCrudo = ctx.getText();
         String valor = stringCrudo.substring(1, stringCrudo.length() - 1);
         return new Primitivo(valor, TipoDato.CADENA, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprTrue(ZetarianoParser.ExprTrueContext ctx) {
+    public Object visitExprTrue(ExprTrueContext ctx) {
         return new Primitivo(true, TipoDato.BOOLEANO, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprFalse(ZetarianoParser.ExprFalseContext ctx) {
+    public Object visitExprFalse(ExprFalseContext ctx) {
         return new Primitivo(false, TipoDato.BOOLEANO, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
-    public Object visitExprNull(ZetarianoParser.ExprNullContext ctx) {
+    public Object visitExprNull(ExprNullContext ctx) {
         return new Primitivo("null", TipoDato.NULO, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 }

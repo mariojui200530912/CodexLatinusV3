@@ -69,7 +69,7 @@ public class ResaltadorSintactico {
                 return "keyword";
             } else if (tipoToken == ZetarianoLexer.CADENA || tipoToken == ZetarianoLexer.CARACTER_LITERAL) {
                 return "string";
-            } else if (tipoToken == ZetarianoLexer.ENTERO || tipoToken == ZetarianoLexer.FLOTANTE_LITERAL) {
+            } else if (tipoToken == ZetarianoLexer.ENTERO_LITERAL || tipoToken == ZetarianoLexer.DOUBLE_LITERAL) {
                 return "number";
             } else if (tipoToken == ZetarianoLexer.COMENTARIO_LINEA || tipoToken == ZetarianoLexer.COMENTARIO_BLOQUE) {
                 return "comment";

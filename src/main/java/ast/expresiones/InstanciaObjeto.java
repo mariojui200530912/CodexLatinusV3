@@ -41,7 +41,6 @@ public class InstanciaObjeto extends Expresion {
         gen.agregarCuarteta(new Asignacion3D(t_referenciaThis, new cuartetas.PunteroGlobal3D("H")));
 
         // Reservar el espacio de todos los atributos moviendo el puntero H
-        // H = H + simClase.tamano;
         gen.agregarCuarteta(new OperacionBinaria3D(
                 new cuartetas.PunteroGlobal3D("H"),
                 new cuartetas.PunteroGlobal3D("H"),
@@ -55,6 +54,7 @@ public class InstanciaObjeto extends Expresion {
                 t_nuevoP, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
         ));
 
+        // Inyectar 'this' en la posición 0 del Stack de la función constructora
         AccesoTemporal t_posThis = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(t_posThis, t_nuevoP, "+", new Literal3D("0")));
         gen.agregarCuarteta(new SetStack3D(t_posThis, t_referenciaThis));
@@ -77,9 +77,11 @@ public class InstanciaObjeto extends Expresion {
 
         String nombreConstructor = nombreClase + "_" + nombreClase;
 
+        // Cambio de entorno y LLAMADA AL CONSTRUCTOR usando Call3D
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_nuevoP));
-        gen.agregarCuarteta(new Asignacion3D(new AccesoTemporal("llamar"), new Literal3D(nombreConstructor + "()")));
+        gen.agregarCuarteta(new Call3D(nombreConstructor)); // <--- CORRECCIÓN APLICADA
 
+        // Restauración del entorno
         AccesoTemporal t_regresarP = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
                 t_regresarP, new cuartetas.PunteroGlobal3D("P"), "-", new Literal3D(String.valueOf(entorno.offset))
