@@ -70,7 +70,7 @@ public class ValidadorTipos {
         switch (tipoString.toLowerCase()) {
             case "entero": case "int": case "numerus":
                 return TipoDato.ENTERO;
-            case "flotante": case "double": case "decimalis":
+            case "flotante": case "double": case "decimalis": case "decimal":
                 return TipoDato.DECIMAL;
             case "bool": case "boolean": case "verum": case "falsus": case "booleano":
                 return TipoDato.BOOLEANO;
