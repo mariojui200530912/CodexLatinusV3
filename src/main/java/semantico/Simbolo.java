@@ -18,6 +18,9 @@ public class Simbolo {
 
     public boolean esReferencia; // Para objetos o arreglos pasados por referencia
 
+    public List<String> vTableFirmas;
+    public List<String> vTableEtiquetasC3D;
+
     // Constructor completo para Clases y Métodos
     public Simbolo(String id, String tipo, String categoria, String visibilidad, String clasePadre) {
         this.id = id;
@@ -30,6 +33,8 @@ public class Simbolo {
         this.dimensionesArreglo = new ArrayList<>();
         this.parametros = new ArrayList<>();
         this.esReferencia = false;
+        this.vTableFirmas = new ArrayList<>();
+        this.vTableEtiquetasC3D = new ArrayList<>();
     }
 
     public Simbolo(String id, String tipo, String categoria) {

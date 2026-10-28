@@ -50,9 +50,9 @@ public class DefinicionFuncion extends Instruccion {
 
         // El offset 0 está reservado para el valor de retorno ('return')
         entornoLocal.offset = 1;
-
-        // INYECCIÓN DEL METADATO DE RETORNO (Crucial para que NodoRetornar lo encuentre)
-        entornoLocal.insertar(new Simbolo("$retorno", tipoString, "Metadato"));
+        Simbolo simRetorno = new Simbolo("$retorno", tipoString, "Metadato");
+        simRetorno.direccionMemoria = 0;
+        entornoLocal.tabla.put("$retorno", simRetorno);
 
         // Registrar los parametros en el entorno local
         if (parametros != null) {
@@ -61,14 +61,15 @@ public class DefinicionFuncion extends Instruccion {
                 Simbolo simParam = new Simbolo(param.id, tipoParamStr, "Variable");
 
                 // Le asignamos su posicion en el Stack a este parametro y guardamos en la tabla
-                simParam.direccionMemoria = entornoLocal.offset++;
-                simFuncion.parametros.add(simParam);
                 entornoLocal.insertar(simParam);
+                simFuncion.parametros.add(simParam);
             }
         }
 
         // Iniciar la etiqueta de la funcion en C3D
         gen.agregarCuarteta(new DefinicionEtiqueta3D(idFuncion));
+
+        gen.agregarCuarteta(new cuartetas.GuardarReturnAddress());
 
         // Generar el código de las instrucciones internas
         if (bloque != null) {

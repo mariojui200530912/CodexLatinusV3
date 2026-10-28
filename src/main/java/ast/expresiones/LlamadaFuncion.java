@@ -112,7 +112,7 @@ public class LlamadaFuncion extends Expresion {
             AccesoTemporal t_posArg = new AccesoTemporal(gen.generarTemporal());
 
             gen.agregarCuarteta(new OperacionBinaria3D(
-                    t_posArg, t_nuevoP, "+", new Literal3D(String.valueOf(paramFormal.direccionMemoria))
+                    t_posArg, t_nuevoP, "+", new Literal3D(String.valueOf(i + 1))
             ));
             gen.agregarCuarteta(new SetStack3D(t_posArg, resArg.valorC3D));
         }
@@ -128,16 +128,9 @@ public class LlamadaFuncion extends Expresion {
         gen.agregarCuarteta(new Asignacion3D(new cuartetas.PunteroGlobal3D("P"), t_regresarP));
 
         TipoDato tipoRetorno = ValidadorTipos.parsearTipo(simFuncion.tipo);
-
         if (tipoRetorno != TipoDato.VOID) {
-            AccesoTemporal t_posRetorno = new AccesoTemporal(gen.generarTemporal());
-
-            gen.agregarCuarteta(new OperacionBinaria3D(
-                    t_posRetorno, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(entorno.offset))
-            ));
-
             AccesoTemporal t_valorRetorno = new AccesoTemporal(gen.generarTemporal());
-            gen.agregarCuarteta(new GetStack3D(t_valorRetorno, t_posRetorno));
+            gen.agregarCuarteta(new GetStack3D(t_valorRetorno, t_nuevoP));
 
             ResultadoC3D resFinal = new ResultadoC3D(t_valorRetorno, tipoRetorno);
             if (tipoRetorno == TipoDato.OBJETO) resFinal.tipoStringOriginal = simFuncion.tipo;

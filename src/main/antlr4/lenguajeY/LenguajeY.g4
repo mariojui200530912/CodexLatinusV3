@@ -45,7 +45,7 @@ grammar LenguajeY;
     }
 
     private Token crearToken(int tipo, String texto) {
-            return _factory.create(new Pair<>(this, _input), tipo, texto, _channel, _tokenStartCharIndex, _tokenStartCharIndex, _tokenStartLine, _tokenStartCharPositionInLine);
+            return _factory.create(new Pair<>(this, _input), tipo, texto, _channel, _tokenStartCharIndex, _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine);
     }
 
     private void procesarIndentacion(int espacios) {
@@ -66,7 +66,7 @@ grammar LenguajeY;
 // REGLAS SINTACTICAS (PARSER)
 // ======================================================
 
-programa: NEWLINE? seccionEstructuras? seccionFunciones? EOF;
+programa: NEWLINE* seccionEstructuras? NEWLINE* seccionFunciones? NEWLINE* EOF;
 
 // --- ESTRUCTURAS ---
 seccionEstructuras: DEF_ESTRUCTURAS NEWLINE (estructuraDef | NEWLINE)*;
@@ -76,10 +76,10 @@ atributo: tipoDato ID (CORCHETE_A ENTERO CORCHETE_C)* NEWLINE; // Soporte multid
 // --- FUNCIONES ---
 seccionFunciones: DEF_FUNCIONES NEWLINE (funcionDef | NEWLINE)*;
 
-funcionDef: DEFINIR FUNCION ID PAREN_A parametros? PAREN_C (FLECHA tipoDato)? DOSPUNTOS NEWLINE INDENT (instruccion | NEWLINE)* DEDENT;
+funcionDef: DEFINIR FUNCION? ID PAREN_A parametros? PAREN_C (FLECHA tipoDato)? DOSPUNTOS NEWLINE INDENT (instruccion | NEWLINE)* DEDENT;
 parametros: parametro (COMA parametro)*;
 
-parametro: (CORCHETE_A | LLAVE_A)? tipoDato ID;
+parametro: (CORCHETE_A CORCHETE_C | LLAVE_A LLAVE_C)? tipoDato ID;
 
 // --- TIPOS DE DATO ---
 tipoDato: T_ENTERO | T_CADENA | T_FLOTANTE | T_CARACTER | T_BOOL | ID;

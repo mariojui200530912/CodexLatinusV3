@@ -157,7 +157,7 @@ public class LenguajeYLexer extends Lexer {
 	    }
 
 	    private Token crearToken(int tipo, String texto) {
-	            return _factory.create(new Pair<>(this, _input), tipo, texto, _channel, _tokenStartCharIndex, _tokenStartCharIndex, _tokenStartLine, _tokenStartCharPositionInLine);
+	            return _factory.create(new Pair<>(this, _input), tipo, texto, _channel, _tokenStartCharIndex, _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine);
 	    }
 
 	    private void procesarIndentacion(int espacios) {

@@ -77,9 +77,11 @@ public class OperacionBinaria extends Expresion {
         AccesoTemporal temporalResultado = new AccesoTemporal(gen.generarTemporal());
 
         if (esAritmetico(operador)) {
-            // Nota: Si el resultado es CADENA (concatenación de string + string/int),
-            // en C3D requerirá una llamada a una función nativa de manejo de strings en el Heap.
-            // Por ahora, emitimos la instrucción binaria estándar.
+            if (operador.equals("+") && (resIzq.tipo == TipoDato.CADENA || resDer.tipo == TipoDato.CADENA)) {
+                gen.agregarCuarteta(new Concat3D(temporalResultado, resIzq.valorC3D, resDer.valorC3D));
+                return new ResultadoC3D(temporalResultado, TipoDato.CADENA);
+            }
+
             gen.agregarCuarteta(new OperacionBinaria3D(
                     temporalResultado, resIzq.valorC3D, operador, resDer.valorC3D
             ));

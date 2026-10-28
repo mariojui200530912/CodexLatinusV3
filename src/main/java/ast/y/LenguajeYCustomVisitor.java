@@ -181,7 +181,9 @@ public class LenguajeYCustomVisitor extends LenguajeYBaseVisitor<Object> {
         String idFuncion = ctx.ID().getText();
         List<Expresion> args = new ArrayList<>();
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
-        return new LlamadaFuncion(idFuncion, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+
+        LlamadaFuncion llamada = new LlamadaFuncion(idFuncion, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new NodoLlamada(llamada, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override

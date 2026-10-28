@@ -37,32 +37,31 @@ public class DefinicionMetodo extends Instruccion {
     public Object generar(TablaSimbolos entornoClase) {
         GeneradorC3D gen = GeneradorC3D.getInstancia();
 
-        if (entornoClase.tabla.containsKey(idMetodo)) {
-            GestorErrores.getInstancia().agregarError(
-                    TipoError.SEMANTICO, "El método '" + idMetodo + "' ya está definido en la clase '" + nombreClase + "'.", linea, columna
-            );
-            return null;
+        this.nombreClase = entornoClase.nombreEntorno.replace("Clase_", "");
+
+        Simbolo simMetodo = entornoClase.buscarLocal(idMetodo);
+        if (simMetodo == null) {
+            String tipoStr = (tipoRetorno == TipoDato.OBJETO && tipoObjetoRetorno != null) ? tipoObjetoRetorno : tipoRetorno.toString();
+            simMetodo = new Simbolo(idMetodo, tipoStr, "Metodo", visibilidad, null);
+            entornoClase.insertar(simMetodo);
         }
 
-        String tipoStr = (tipoRetorno == TipoDato.OBJETO && tipoObjetoRetorno != null) ? tipoObjetoRetorno : tipoRetorno.toString();
-        Simbolo simMetodo = new Simbolo(idMetodo, tipoStr, "Metodo", visibilidad, null);
-        entornoClase.insertar(simMetodo);
+        simMetodo.parametros.clear();
 
         String nombreUnicoMetodo = nombreClase + "_" + idMetodo;
         TablaSimbolos entornoLocal = new TablaSimbolos(entornoClase, "Metodo_" + nombreUnicoMetodo);
         entornoLocal.offset = 1;
-
-        // El NodoRetornar buscará este símbolo "$retorno" para validar que devuelva el tipo correcto
-        entornoLocal.insertar(new Simbolo("$retorno", tipoStr, "Metadato"));
+        String tipoStr = (tipoRetorno == TipoDato.OBJETO && tipoObjetoRetorno != null) ? tipoObjetoRetorno : tipoRetorno.toString();
+        Simbolo simRetorno = new Simbolo("$retorno", tipoStr, "Metadato");
+        simRetorno.direccionMemoria = 0;
+        entornoLocal.tabla.put("$retorno", simRetorno);
 
         Simbolo simThis = new Simbolo("this", nombreClase, "Variable");
-        simThis.direccionMemoria = entornoLocal.offset++;
         entornoLocal.insertar(simThis);
         simMetodo.parametros.add(simThis);
 
         if (parametros != null) {
             Set<String> nombresParametros = new HashSet<>();
-
             for (DefinicionFuncion.ParametroFormal param : parametros) {
                 if (!nombresParametros.add(param.id)) {
                     GestorErrores.getInstancia().agregarError(
@@ -74,14 +73,14 @@ public class DefinicionMetodo extends Instruccion {
                 String tipoParamStr = (param.tipo == TipoDato.OBJETO) ? param.tipoObjeto : param.tipo.toString();
                 Simbolo simParam = new Simbolo(param.id, tipoParamStr, "Variable");
 
-                simParam.direccionMemoria = entornoLocal.offset++;
-                simMetodo.parametros.add(simParam);
                 entornoLocal.insertar(simParam);
+                simMetodo.parametros.add(simParam);
             }
         }
 
-        // Emitir la etiqueta de entrada de la función en C3D
         gen.agregarCuarteta(new DefinicionEtiqueta3D(nombreUnicoMetodo));
+
+        gen.agregarCuarteta(new cuartetas.GuardarReturnAddress());
 
         if (bloque != null) {
             for (Instruccion inst : bloque) {
@@ -89,7 +88,6 @@ public class DefinicionMetodo extends Instruccion {
             }
         }
 
-        // Emitir instrucción de retorno por defecto (cubriendo el caso en que un método void no tenga 'return;')
         gen.agregarCuarteta(new Return3D());
         return null;
     }

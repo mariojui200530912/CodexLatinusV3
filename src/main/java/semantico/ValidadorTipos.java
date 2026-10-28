@@ -20,6 +20,9 @@ public class ValidadorTipos {
 
     public static TipoDato operarSuma(TipoDato izq, TipoDato der) {
         if (izq == TipoDato.ERROR || der == TipoDato.ERROR) return TipoDato.ERROR;
+        if (izq == TipoDato.CADENA || der == TipoDato.CADENA) {
+            return TipoDato.CADENA;
+        }
         if (izq.ordinal() >= 5 || der.ordinal() >= 5) return TipoDato.ERROR;
         return matrizSuma[izq.ordinal()][der.ordinal()];
     }
@@ -33,28 +36,29 @@ public class ValidadorTipos {
     // Relacional estricto (>, <, >=, <=) - Solo para números
     public static TipoDato operarRelacional(TipoDato izq, TipoDato der) {
         if (izq == TipoDato.ERROR || der == TipoDato.ERROR) return TipoDato.ERROR;
+
         if ((izq == TipoDato.ENTERO || izq == TipoDato.DECIMAL || izq == TipoDato.CARACTER) &&
                 (der == TipoDato.ENTERO || der == TipoDato.DECIMAL || der == TipoDato.CARACTER)) {
             return TipoDato.BOOLEANO;
         }
+
+        if (izq == TipoDato.OBJETO || der == TipoDato.OBJETO) return TipoDato.BOOLEANO;
         return TipoDato.ERROR;
     }
 
     public static TipoDato operarIgualdad(TipoDato izq, TipoDato der) {
         if (izq == TipoDato.ERROR || der == TipoDato.ERROR) return TipoDato.ERROR;
 
-        // Tipos exactamente iguales (ej. BOOLEANO == BOOLEANO, NULO == NULO)
         if (izq == der) return TipoDato.BOOLEANO;
 
-        // Comparacion cruzada de números (ej. ENTERO == DECIMAL)
         if ((izq == TipoDato.ENTERO || izq == TipoDato.DECIMAL || izq == TipoDato.CARACTER) &&
                 (der == TipoDato.ENTERO || der == TipoDato.DECIMAL || der == TipoDato.CARACTER)) {
             return TipoDato.BOOLEANO;
         }
 
-        // Evaluar Objetos (ID) contra NULL
         if ((izq == TipoDato.OBJETO && der == TipoDato.NULO) ||
-                (izq == TipoDato.NULO && der == TipoDato.OBJETO)) {
+                (izq == TipoDato.NULO && der == TipoDato.OBJETO) ||
+                (izq == TipoDato.OBJETO && der == TipoDato.OBJETO)) {
             return TipoDato.BOOLEANO;
         }
 
@@ -68,7 +72,7 @@ public class ValidadorTipos {
                 return TipoDato.ENTERO;
             case "flotante": case "double": case "decimalis":
                 return TipoDato.DECIMAL;
-            case "bool": case "boolean": case "verum": case "falsus":
+            case "bool": case "boolean": case "verum": case "falsus": case "booleano":
                 return TipoDato.BOOLEANO;
             case "caracter": case "char": case "littera":
                 return TipoDato.CARACTER;
@@ -94,10 +98,10 @@ public class ValidadorTipos {
     public static boolean validarAsignacion(TipoDato destino, TipoDato origen) {
         if (destino == TipoDato.ERROR || origen == TipoDato.ERROR) return false;
 
-        // Permitir asignar null a un objeto o arreglo
         if (destino == TipoDato.OBJETO && origen == TipoDato.NULO) return true;
-        // Permite asignar un Objeto a otra variable Objeto
         if (destino == TipoDato.OBJETO && origen == TipoDato.OBJETO) return true;
+
+        if (destino == TipoDato.OBJETO && origen == TipoDato.DECIMAL) return true;
 
         if (destino.ordinal() >= 5 || origen.ordinal() >= 5) return false;
 

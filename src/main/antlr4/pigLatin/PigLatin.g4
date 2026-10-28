@@ -12,7 +12,7 @@ seccionVariables: VARIABILES_MAYOR declaracion*;
 
 declaracion: ESTO ID DOSPUNTOS? tipoDato? expresion PUNTOCOMA?                                                           # DeclNormal
            | ESTO ID DOSPUNTOS? NOVUS tipoDato PAREN_A argumentos? PAREN_C (DOSPUNTOS tipoDato)? PUNTOCOMA?              # DeclObjetoNovus
-           | ESTO ID DOSPUNTOS? NULL_LIT tipoDato PUNTOCOMA?                                                             # DeclObjetoNull
+           | ESTO ID DOSPUNTOS? NULL_LIT DOSPUNTOS? tipoDato PUNTOCOMA?                                                  # DeclObjetoNull
            | SERIES ID CORCHETE_A expresion CORCHETE_C DOSPUNTOS? tipoDato (LLAVE_A argumentos? LLAVE_C)? PUNTOCOMA?     # DeclArreglo
            ;
 
@@ -131,3 +131,4 @@ CARACTER_LIT     : '\'' . '\'';
 WS               : [ \t\r\n]+ -> skip;
 COMENTARIO_LINEA : '//' ~[\r\n]* -> skip;
 COMENTARIO_BLOQUE: '/*' .*? '*/' -> skip;
+COMENTARIO_PIG   : '##' .*? '##' -> skip;

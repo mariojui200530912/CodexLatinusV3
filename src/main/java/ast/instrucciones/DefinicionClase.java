@@ -26,7 +26,6 @@ public class DefinicionClase extends Instruccion {
 
     @Override
     public Object generar(TablaSimbolos entornoGlobal) {
-        // Validar que la clase no exista ya en el entorno global
         if (entornoGlobal.buscar(nombreClase) != null) {
             GestorErrores.getInstancia().agregarError(
                     TipoError.SEMANTICO, "La clase '" + nombreClase + "' ya ha sido definida.", linea, columna
@@ -34,58 +33,84 @@ public class DefinicionClase extends Instruccion {
             return null;
         }
 
-        // Crear el símbolo de la clase
         Simbolo simClase = new Simbolo(nombreClase, "Objeto", "Clase", visibilidad, clasePadre);
-
-        // Crear el entorno específico de la clase (Scope)
         TablaSimbolos entornoClase = new TablaSimbolos(entornoGlobal, "Clase_" + nombreClase);
-
         GeneradorC3D.getInstancia().guardarEntornoClase(nombreClase, entornoClase);
 
-        // Si hay herencia, debemos buscar los atributos del padre para heredar el offset inicial
         int offsetAtributos = 0;
+        List<String> vTableFirmas = new ArrayList<>();
+        List<String> vTableEtiquetasC3D = new ArrayList<>();
+
+        // HERENCIA: Copiar Atributos y V-Table del Padre
         if (clasePadre != null) {
             Simbolo simPadre = entornoGlobal.buscar(clasePadre);
-            if (simPadre == null || !"Clase".equals(simPadre.categoria)) {
-                GestorErrores.getInstancia().agregarError(
-                        TipoError.SEMANTICO, "La clase padre '" + clasePadre + "' no existe.", linea, columna
-                );
-            } else {
+            if (simPadre != null && "Clase".equals(simPadre.categoria)) {
                 offsetAtributos = simPadre.tamano;
                 simClase.parametros.addAll(simPadre.parametros);
+
+                for (Simbolo paramPadre : simPadre.parametros) {
+                    if (paramPadre.categoria.equals("Atributo")) {
+                        entornoClase.insertar(paramPadre);
+                    }
+                }
+
+                if (simPadre.vTableFirmas != null) {
+                    vTableFirmas.addAll(simPadre.vTableFirmas);
+                    vTableEtiquetasC3D.addAll(simPadre.vTableEtiquetasC3D);
+                }
+            } else {
+                GestorErrores.getInstancia().agregarError(TipoError.SEMANTICO, "Clase padre '" + clasePadre + "' no encontrada antes de " + nombreClase, linea, columna);
             }
         }
 
-        // Primer recorrido: Extraer atributos y calcular el tamaño total del objeto en el Heap
+        // Registrar Atributos Propios y construir V-Table (Polimorfismo)
         for (Instruccion miembro : miembros) {
             if (miembro instanceof DeclaracionAtributo) {
                 DeclaracionAtributo attr = (DeclaracionAtributo) miembro;
-
                 String tipoString = attr.tipoObjeto != null ? attr.tipoObjeto : attr.tipo.toString();
                 Simbolo simAttr = new Simbolo(attr.idVariable, tipoString, "Atributo", attr.visibilidad, null);
 
-                // Asignamos la posición relativa de este atributo dentro del objeto
-                simAttr.direccionMemoria = offsetAtributos;
-                offsetAtributos++;
+                if (attr.esArreglo) {
+                    simAttr.dimensionesArreglo.add(1);
+                }
 
-                // Guardamos el atributo en la lista (esto lo usará AccesoPropiedad para saber el desplazamiento)
+                simAttr.direccionMemoria = offsetAtributos++;
                 simClase.parametros.add(simAttr);
                 entornoClase.insertar(simAttr);
             }
-        }
+            else if (miembro instanceof DefinicionMetodo) {
+                DefinicionMetodo met = (DefinicionMetodo) miembro;
+                String etiquetaC3D = nombreClase + "_" + met.idMetodo;
 
-        // Guardamos el tamaño final de la clase (muy importante para el nodo InstanciaObjeto)
-        simClase.tamano = offsetAtributos;
-        entornoGlobal.insertar(simClase); // Se guarda en global para que instanciaciones la encuentren
+                Simbolo simMetodo = new Simbolo(met.idMetodo, met.tipoRetorno.toString(), "Metodo", met.visibilidad, null);
+                entornoClase.insertar(simMetodo);
 
-        // Segundo recorrido: Generar los métodos y constructores (ahora que los atributos existen)
-        for (Instruccion miembro : miembros) {
-            if (miembro instanceof DefinicionMetodo) {
-                // DefinicionMetodo generará su C3D e inyectará 'this' en la posición 0 de su propio stack
-                miembro.generar(entornoClase);
+                if (met.idMetodo.equals(nombreClase)) continue;
+
+                int indexOverride = vTableFirmas.indexOf(met.idMetodo);
+                if (indexOverride != -1) {
+                    vTableEtiquetasC3D.set(indexOverride, etiquetaC3D);
+                } else {
+                    vTableFirmas.add(met.idMetodo);
+                    vTableEtiquetasC3D.add(etiquetaC3D);
+                }
             }
         }
 
+        simClase.tamano = offsetAtributos;
+        simClase.vTableFirmas = vTableFirmas;
+        simClase.vTableEtiquetasC3D = vTableEtiquetasC3D;
+        entornoGlobal.insertar(simClase);
+
         return null;
+    }
+
+    public void generarCuerpoMetodos(TablaSimbolos entornoGlobal) {
+        TablaSimbolos entornoClase = GeneradorC3D.getInstancia().obtenerEntornoClase(nombreClase);
+        for (Instruccion miembro : miembros) {
+            if (miembro instanceof DefinicionMetodo) {
+                miembro.generar(entornoClase);
+            }
+        }
     }
 }

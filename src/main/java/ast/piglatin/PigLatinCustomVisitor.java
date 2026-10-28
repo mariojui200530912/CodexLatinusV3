@@ -20,6 +20,11 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
     @Override
     public Object visitPrograma(PigLatinParser.ProgramaContext ctx) {
         List<Instruccion> programa = new ArrayList<>();
+
+        // Extraer las importaciones primero
+        for (PigLatinParser.ImportacionContext impCtx : ctx.importacion()) {
+            programa.add((Instruccion) visit(impCtx));
+        }
         if (ctx.seccionVariables() != null) {
             programa.addAll((List<Instruccion>) visit(ctx.seccionVariables()));
         }
@@ -27,6 +32,28 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
             programa.addAll((List<Instruccion>) visit(ctx.seccionPrincipal()));
         }
         return programa;
+    }
+
+    @Override
+    public Object visitImportacion(PigLatinParser.ImportacionContext ctx) {
+        int linea = ctx.getStart().getLine();
+        int col = ctx.getStart().getCharPositionInLine();
+
+        // Reconstruir la ruta original (ej. banco.Cuenta.z)
+        StringBuilder rutaCruda = new StringBuilder();
+        for (int i = 1; i < ctx.getChildCount(); i++) {
+            String texto = ctx.getChild(i).getText();
+            if (!texto.equals(";")) {
+                rutaCruda.append(texto);
+            }
+        }
+
+        String[] partes = rutaCruda.toString().split("\\.");
+        String extension = partes[partes.length - 1];
+        String rutaSinExtension = String.join(java.io.File.separator, java.util.Arrays.copyOfRange(partes, 0, partes.length - 1));
+        String rutaFinal = rutaSinExtension + "." + extension;
+
+        return new ImportarArchivo(rutaFinal, linea, col);
     }
 
     @Override
@@ -101,7 +128,8 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         if (ctx.LLAVE_A() != null) {
             List<Expresion> elementos = new ArrayList<>();
             if (ctx.argumentos() != null) elementos = (List<Expresion>) visit(ctx.argumentos());
-            valor = new ArregloLiteral(elementos, linea, col);
+            ArregloLiteral arreglo = new ArregloLiteral(elementos, linea, col);
+            valor = arreglo;
         } else {
             Expresion tamano = (Expresion) visit(ctx.expresion());
             valor = new InstanciaArreglo(tipo, Arrays.asList(tamano), linea, col); // Soporte a lista de dimensiones
@@ -150,13 +178,17 @@ public class PigLatinCustomVisitor extends PigLatinBaseVisitor<Object> {
         Expresion base = (Expresion) visit(ctx.acceso());
         List<Expresion> args = new ArrayList<>();
         if (ctx.argumentos() != null) args = (List<Expresion>) visit(ctx.argumentos());
-
+        Expresion llamada = null;
         if (base instanceof AccesoPropiedad) {
             AccesoPropiedad prop = (AccesoPropiedad) base;
-            return new LlamadaMetodo(prop.objetoBase, prop.idPropiedad, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+            llamada = new LlamadaMetodo(prop.objetoBase, prop.idPropiedad, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
         } else if (base instanceof AccesoVariable) {
             AccesoVariable var = (AccesoVariable) base;
-            return new LlamadaFuncion(var.id, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+            llamada = new LlamadaFuncion(var.id, args, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        }
+
+        if (llamada != null) {
+            return new NodoLlamada(llamada, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
         }
         return null;
     }

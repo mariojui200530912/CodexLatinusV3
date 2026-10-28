@@ -25,14 +25,15 @@ public class TraductorRiscV {
         data.append("Stack: .space 65536\n");
         data.append("P: .word 0\n");
         data.append("H: .word 0\n");
-        data.append("salto_linea: .asciz \"\\n\"\n");
+        int espacioTemporales = (cantidadTemporales > 0) ? (cantidadTemporales * 4) : 400;
+        data.append("Temporales: .space ").append(espacioTemporales).append("\n");
 
-        if (cantidadTemporales > 0) {
-            data.append("Temporales: .space ").append(cantidadTemporales * 4).append("\n");
-        }
+        // Los strings y arreglos de bytes van al final
+        data.append("salto_linea: .asciz \"\\n\"\n");
 
         // Sección de Código (.text)
         text.append(".text\n.globl main\nmain:\n");
+        text.append("  j inicio_main\n");
 
         for (Cuarteta c : codigoC3D) {
             // Imprimimos la instrucción original en C3D como comentario de referencia en el ensamblador

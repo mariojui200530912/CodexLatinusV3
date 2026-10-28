@@ -85,6 +85,8 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         }
 
         List<Instruccion> bloque = (List<Instruccion>) visit(ctx.bloque());
+        System.out.println("Código crudo del bloque: " + ctx.bloque().getText());
+        System.out.println("Visitando constructor: " + idConstructor + " - Instrucciones en el bloque: " + bloque.size());
 
         return new DefinicionMetodo(idConstructor, TipoDato.VOID, null, parametros, bloque, visibilidad, linea, col);
     }
@@ -136,8 +138,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     public Object visitBloque(BloqueContext ctx) {
         List<Instruccion> instrucciones = new ArrayList<>();
         for (InstruccionContext instCtx : ctx.instruccion()) {
-            Instruccion inst = (Instruccion) visit(instCtx);
-            if (inst != null) instrucciones.add(inst);
+            Object res = visit(instCtx);
+            if (res instanceof List) instrucciones.addAll((List<Instruccion>) res);
+            else if (res != null) instrucciones.add((Instruccion) res);
         }
         return instrucciones;
     }
@@ -146,6 +149,15 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
 
     @Override
     public Object visitInstruccion(InstruccionContext ctx) {
+        if (ctx.asignacionOMetodo() != null) return visit(ctx.asignacionOMetodo());
+        if (ctx.declaracionLocal() != null) return visit(ctx.declaracionLocal());
+        if (ctx.ifStmt() != null) return visit(ctx.ifStmt());
+        if (ctx.forStmt() != null) return visit(ctx.forStmt());
+        if (ctx.whileStmt() != null) return visit(ctx.whileStmt());
+        if (ctx.doWhileStmt() != null) return visit(ctx.doWhileStmt());
+        if (ctx.switchStmt() != null) return visit(ctx.switchStmt());
+        if (ctx.bloque() != null) return visit(ctx.bloque());
+
         int linea = ctx.getStart().getLine();
         int col = ctx.getStart().getCharPositionInLine();
 
@@ -161,9 +173,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         } else if (ctx.CONTINUE() != null) {
             return new NodoContinue(linea, col);
         } else if (ctx.READLN() != null) {
-            return new LlamadaFuncion("readln", new ArrayList<>(), linea, col); // readln como instrucción
+            return new LlamadaFuncion("readln", new ArrayList<>(), linea, col);
         }
-        return visitChildren(ctx);
+        return null;
     }
 
     @Override
@@ -192,11 +204,15 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         Expresion condicion = (Expresion) visit(ctx.expresion());
 
         List<Instruccion> bloqueVerdadero = new ArrayList<>();
-        bloqueVerdadero.add((Instruccion) visit(ctx.instruccion(0)));
+        Object resVerdadero = visit(ctx.instruccion(0));
+        if (resVerdadero instanceof List) bloqueVerdadero.addAll((List<Instruccion>) resVerdadero);
+        else if (resVerdadero != null) bloqueVerdadero.add((Instruccion) resVerdadero);
 
         List<Instruccion> bloqueFalso = new ArrayList<>();
         if (ctx.ELSE() != null) {
-            bloqueFalso.add((Instruccion) visit(ctx.instruccion(1)));
+            Object resFalso = visit(ctx.instruccion(1));
+            if (resFalso instanceof List) bloqueFalso.addAll((List<Instruccion>) resFalso);
+            else if (resFalso != null) bloqueFalso.add((Instruccion) resFalso);
         }
 
         return new NodoIf(condicion, bloqueVerdadero, bloqueFalso, linea, col);
@@ -225,7 +241,7 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         if (ctx.declaracionLocal() != null) {
             inicializacion = (Instruccion) visit(ctx.declaracionLocal());
         } else if (!ctx.asignacionOMetodo().isEmpty()) {
-            ParseTree posibleInit = ctx.asignacionOMetodo(0);
+            org.antlr.v4.runtime.tree.ParseTree posibleInit = ctx.asignacionOMetodo(0);
             if (ctx.children.indexOf(posibleInit) < primerPuntoComa) {
                 inicializacion = (Instruccion) visit(posibleInit);
             }
@@ -244,7 +260,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         }
 
         List<Instruccion> bloque = new ArrayList<>();
-        bloque.add((Instruccion) visit(ctx.instruccion()));
+        Object resBloque = visit(ctx.instruccion());
+        if (resBloque instanceof List) bloque.addAll((List<Instruccion>) resBloque);
+        else if (resBloque != null) bloque.add((Instruccion) resBloque);
 
         return new NodoPara(inicializacion, condicion, actualizacion, bloque, linea, col);
     }
@@ -289,12 +307,17 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
             args = (List<Expresion>) visit(ctx.argumentos());
         }
 
+        Expresion llamada = null;
         if (base instanceof AccesoPropiedad) {
             AccesoPropiedad prop = (AccesoPropiedad) base;
-            return new LlamadaMetodo(prop.objetoBase, prop.idPropiedad, args, linea, col);
+            llamada = new LlamadaMetodo(prop.objetoBase, prop.idPropiedad, args, linea, col);
         } else if (base instanceof AccesoVariable) {
             AccesoVariable var = (AccesoVariable) base;
-            return new LlamadaFuncion(var.id, args, linea, col);
+            llamada = new LlamadaFuncion(var.id, args, linea, col);
+        }
+
+        if (llamada != null) {
+            return new NodoLlamada(llamada, linea, col);
         }
         return null;
     }
@@ -303,7 +326,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     public Object visitWhileStmt(WhileStmtContext ctx) {
         Expresion condicion = (Expresion) visit(ctx.expresion());
         List<Instruccion> bloque = new ArrayList<>();
-        bloque.add((Instruccion) visit(ctx.instruccion()));
+        Object res = visit(ctx.instruccion());
+        if (res instanceof List) bloque.addAll((List<Instruccion>) res);
+        else if (res != null) bloque.add((Instruccion) res);
         return new NodoMientras(condicion, bloque, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
@@ -311,7 +336,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     public Object visitDoWhileStmt(DoWhileStmtContext ctx) {
         Expresion condicion = (Expresion) visit(ctx.expresion());
         List<Instruccion> bloque = new ArrayList<>();
-        bloque.add((Instruccion) visit(ctx.instruccion()));
+        Object res = visit(ctx.instruccion());
+        if (res instanceof List) bloque.addAll((List<Instruccion>) res);
+        else if (res != null) bloque.add((Instruccion) res);
         return new NodoHacerMientras(bloque, condicion, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
@@ -331,7 +358,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
         Expresion valorCaso = (Expresion) visit(ctx.expresion());
         List<Instruccion> instrucciones = new ArrayList<>();
         for (InstruccionContext instCtx : ctx.instruccion()) {
-            instrucciones.add((Instruccion) visit(instCtx));
+            Object res = visit(instCtx);
+            if (res instanceof List) instrucciones.addAll((List<Instruccion>) res);
+            else if (res != null) instrucciones.add((Instruccion) res);
         }
         return new NodoCaso(valorCaso, instrucciones, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
@@ -340,7 +369,9 @@ public class ZetarianoCustomVisitor extends ZetarianoBaseVisitor<Object> {
     public Object visitDefaultCode(DefaultCodeContext ctx) {
         List<Instruccion> instrucciones = new ArrayList<>();
         for (InstruccionContext instCtx : ctx.instruccion()) {
-            instrucciones.add((Instruccion) visit(instCtx));
+            Object res = visit(instCtx);
+            if (res instanceof List) instrucciones.addAll((List<Instruccion>) res);
+            else if (res != null) instrucciones.add((Instruccion) res);
         }
         return instrucciones;
     }

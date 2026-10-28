@@ -54,72 +54,68 @@ public class Declaracion extends Instruccion {
             );
             return null;
         }
+        ResultadoC3D resValor = null;
+        if (valor != null) {
+            resValor = (ResultadoC3D) valor.generar(entorno);
+        }
 
-        // Registrar en la Tabla de Simbolos y obtener el desplazamiento (offset) en el Stack
+        if (this.tipo == TipoDato.NULO && resValor != null && resValor.tipo != TipoDato.ERROR) {
+            this.tipo = resValor.tipo;
+            this.tipoObjeto = resValor.tipoStringOriginal;
+        }
+
         String tipoString = (tipo == TipoDato.OBJETO && tipoObjeto != null) ? tipoObjeto : tipo.toString();
         Simbolo simNuevaVariable = new Simbolo(idVariable, tipoString, "Variable");
 
-        // entorno.insertar asume la responsabilidad de aumentar el offset (entorno.offset++)
         entorno.insertar(simNuevaVariable);
 
-        // Calcular la direccion fisica: t_pos = P + offset de la variable
         AccesoTemporal t_posicion = new AccesoTemporal(gen.generarTemporal());
         gen.agregarCuarteta(new OperacionBinaria3D(
                 t_posicion, new cuartetas.PunteroGlobal3D("P"), "+", new Literal3D(String.valueOf(simNuevaVariable.direccionMemoria))
         ));
 
-        // Evaluar expresion si la variable se inicializa
-        if (valor != null) {
-            ResultadoC3D resValor = (ResultadoC3D) valor.generar(entorno);
+        if (resValor != null && resValor.tipo != TipoDato.ERROR) {
+            boolean esValida = ValidadorTipos.validarAsignacion(this.tipo, resValor.tipo);
+            if (!esValida) {
+                GestorErrores.getInstancia().agregarError(
+                        TipoError.SEMANTICO,
+                        "Incompatibilidad de tipos: No se puede inicializar un '" + this.tipo + "' con un valor '" + resValor.tipo + "'.",
+                        linea, columna
+                );
+                return null;
+            }
 
-            if (resValor != null && resValor.tipo != TipoDato.ERROR) {
+            if (this.tipo == TipoDato.OBJETO && resValor.tipo == TipoDato.OBJETO) {
+                if (this.tipoObjeto != null && resValor.tipoStringOriginal != null) {
+                    boolean esCompatible = false;
+                    String claseActual = resValor.tipoStringOriginal;
 
-                // Validacion Semantica de Tipos
-                boolean esValida = ValidadorTipos.validarAsignacion(this.tipo, resValor.tipo);
-                if (!esValida) {
-                    GestorErrores.getInstancia().agregarError(
-                            TipoError.SEMANTICO,
-                            "Incompatibilidad de tipos: No se puede inicializar un '" + this.tipo + "' con un valor '" + resValor.tipo + "'.",
-                            linea, columna
-                    );
-                    return null;
-                }
-
-                // Validación de Herencia (Upcasting) para Objetos
-                if (this.tipo == TipoDato.OBJETO && resValor.tipo == TipoDato.OBJETO) {
-                    if (this.tipoObjeto != null && resValor.tipoStringOriginal != null) {
-                        boolean esCompatible = false;
-                        String claseActual = resValor.tipoStringOriginal;
-
-                        while (claseActual != null && !claseActual.isEmpty()) {
-                            if (claseActual.equals(this.tipoObjeto)) {
-                                esCompatible = true;
-                                break;
-                            }
-                            Simbolo simClaseActual = entorno.buscar(claseActual);
-                            if (simClaseActual != null && "Clase".equals(simClaseActual.categoria)) {
-                                claseActual = simClaseActual.clasePadre;
-                            } else {
-                                break;
-                            }
+                    while (claseActual != null && !claseActual.isEmpty()) {
+                        if (claseActual.equals(this.tipoObjeto)) {
+                            esCompatible = true;
+                            break;
                         }
-
-                        if (!esCompatible) {
-                            GestorErrores.getInstancia().agregarError(
-                                    TipoError.SEMANTICO,
-                                    "Incompatibilidad de clases: No se puede inicializar la variable '" + this.tipoObjeto + "' con un objeto '" + resValor.tipoStringOriginal + "'.",
-                                    linea, columna
-                            );
-                            return null;
+                        Simbolo simClaseActual = entorno.buscar(claseActual);
+                        if (simClaseActual != null && "Clase".equals(simClaseActual.categoria)) {
+                            claseActual = simClaseActual.clasePadre;
+                        } else {
+                            break;
                         }
                     }
-                }
 
-                // Guardar valor inicial en el Stack (Stack[(int) t_posicion] = valorC3D)
-                gen.agregarCuarteta(new SetStack3D(t_posicion, resValor.valorC3D));
+                    if (!esCompatible) {
+                        GestorErrores.getInstancia().agregarError(
+                                TipoError.SEMANTICO,
+                                "Incompatibilidad de clases: No se puede inicializar la variable '" + this.tipoObjeto + "' con un objeto '" + resValor.tipoStringOriginal + "'.",
+                                linea, columna
+                        );
+                        return null;
+                    }
+                }
             }
+
+            gen.agregarCuarteta(new SetStack3D(t_posicion, resValor.valorC3D));
         } else {
-            // Si no hay inicialización explícita, inyectar un 0/null por defecto
             gen.agregarCuarteta(new SetStack3D(t_posicion, new Literal3D("0")));
         }
 

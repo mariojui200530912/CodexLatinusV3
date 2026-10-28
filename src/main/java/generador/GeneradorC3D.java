@@ -11,7 +11,10 @@ public class GeneradorC3D {
     private int contadorTemporales;
     private int contadorEtiquetas;
 
-    private List<Cuarteta> codigo;
+    private List<Cuarteta> codigoFunciones;
+    private List<Cuarteta> codigoMain;
+
+    private boolean generandoFuncion;
 
     // Pilas globales para resolver los saltos de ciclos anidados
     public Stack<String> etiquetasBreak;
@@ -23,7 +26,9 @@ public class GeneradorC3D {
     private GeneradorC3D() {
         this.contadorTemporales = 0;
         this.contadorEtiquetas = 0;
-        this.codigo = new ArrayList<>();
+        this.codigoFunciones = new ArrayList<>();
+        this.codigoMain = new ArrayList<>();
+        this.generandoFuncion = false;
         this.etiquetasBreak = new Stack<>();
         this.etiquetasContinue = new Stack<>();
         this.entornosClases = new HashMap<>();
@@ -40,13 +45,22 @@ public class GeneradorC3D {
     public void limpiar() {
         this.contadorTemporales = 0;
         this.contadorEtiquetas = 0;
-        this.codigo.clear();
+        this.codigoFunciones.clear();
+        this.codigoMain.clear();
+        this.generandoFuncion = false;
         this.etiquetasBreak.clear();
         this.etiquetasContinue.clear();
         this.entornosClases.clear();
     }
 
-    // Administrador de Temporales y Etiquetas
+    public void iniciarGeneracionFuncion() {
+        this.generandoFuncion = true;
+    }
+
+    public void finalizarGeneracionFuncion() {
+        this.generandoFuncion = false;
+    }
+
     public String generarTemporal() {
         return "t" + (contadorTemporales++);
     }
@@ -55,13 +69,19 @@ public class GeneradorC3D {
         return "L" + (contadorEtiquetas++);
     }
 
-    // Almacenar instrucciones
     public void agregarCuarteta(Cuarteta cuarteta) {
-        this.codigo.add(cuarteta);
+        if (this.generandoFuncion) {
+            this.codigoFunciones.add(cuarteta);
+        } else {
+            this.codigoMain.add(cuarteta);
+        }
     }
 
     public List<Cuarteta> getCuartetas() {
-        return this.codigo;
+        List<Cuarteta> todas = new ArrayList<>();
+        todas.addAll(this.codigoFunciones);
+        todas.addAll(this.codigoMain);
+        return todas;
     }
 
     public void guardarEntornoClase(String nombreClase, TablaSimbolos entorno) {
@@ -72,7 +92,7 @@ public class GeneradorC3D {
         return this.entornosClases.get(nombreClase);
     }
 
-    // Metodo para imprimir el C3D en formato C (Ideal para depurar antes de RISC-V)
+
     public String obtenerCodigoString() {
         StringBuilder sb = new StringBuilder();
 
@@ -80,8 +100,8 @@ public class GeneradorC3D {
         sb.append("#include <stdio.h>\n\n");
 
         // Memoria Principal
-        sb.append("float Heap[16384];\n");
-        sb.append("float Stack[16384];\n");
+        sb.append("float Heap[65536];\n");
+        sb.append("float Stack[65536];\n");
         sb.append("int P = 0;\n");
         sb.append("int H = 0;\n\n");
 
@@ -96,8 +116,17 @@ public class GeneradorC3D {
             sb.append(";\n\n");
         }
 
+        // Primero las funciones (para que el compilador de C las conozca)
+        sb.append("/* ========== FUNCIONES ========== */\n");
+        for (Cuarteta c : codigoFunciones) {
+            sb.append("\t").append(c.generarCodigo());
+        }
+        sb.append("\n");
+
+        // Luego el main
+        sb.append("/* ========== MAIN ========== */\n");
         sb.append("void main() {\n");
-        for (Cuarteta c : codigo) {
+        for (Cuarteta c : codigoMain) {
             sb.append("\t").append(c.generarCodigo());
         }
         sb.append("\n\treturn;\n");

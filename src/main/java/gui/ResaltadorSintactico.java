@@ -37,6 +37,11 @@ public class ResaltadorSintactico {
         int ultimoFin = 0;
 
         while ((token = lexer.nextToken()).getType() != Token.EOF) {
+            if (lenguaje.toLowerCase().equals("y") &&
+                    (token.getType() == LenguajeYLexer.INDENT || token.getType() == LenguajeYLexer.DEDENT)) {
+                continue;
+            }
+
             int inicioToken = token.getStartIndex();
             int finToken = token.getStopIndex() + 1;
 

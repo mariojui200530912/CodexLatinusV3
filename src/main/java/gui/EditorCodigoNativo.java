@@ -1,5 +1,6 @@
 package gui;
 
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -17,8 +18,15 @@ public class EditorCodigoNativo extends BorderPane {
         codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
 
+        // CORRECCIÓN: Enviar el coloreado a la cola de JavaFX para evitar desincronización
         codeArea.textProperty().addListener((obs, viejo, nuevo) -> {
-            codeArea.setStyleSpans(0, ResaltadorSintactico.calcularResaltado(nuevo, tipoLenguajeActual));
+            Platform.runLater(() -> {
+                if (codeArea.getLength() > 0) {
+                    try {
+                        codeArea.setStyleSpans(0, ResaltadorSintactico.calcularResaltado(codeArea.getText(), tipoLenguajeActual));
+                    } catch (Exception ignored) {} // Previene crashes si el usuario teclea muy rápido
+                }
+            });
         });
 
         statusBar = new Label("Línea: 1, Columna: 0");
@@ -43,7 +51,13 @@ public class EditorCodigoNativo extends BorderPane {
 
     public void setTipoLenguaje(String tipo) {
         this.tipoLenguajeActual = tipo;
-        codeArea.setStyleSpans(0, ResaltadorSintactico.calcularResaltado(codeArea.getText(), tipoLenguajeActual));
+        Platform.runLater(() -> {
+            if (codeArea.getLength() > 0) {
+                try {
+                    codeArea.setStyleSpans(0, ResaltadorSintactico.calcularResaltado(codeArea.getText(), tipoLenguajeActual));
+                } catch (Exception ignored) {}
+            }
+        });
     }
 
     public String getText() {
@@ -51,6 +65,9 @@ public class EditorCodigoNativo extends BorderPane {
     }
 
     public void setText(String texto) {
-        codeArea.replaceText(0, codeArea.getLength(), texto);
+        // CORRECCIÓN: Forzar la limpieza de saltos de línea Windows antes de la inyección
+        String textoLimpio = texto != null ? texto.replace("\r", "") : "";
+        codeArea.clear();
+        codeArea.appendText(textoLimpio);
     }
 }

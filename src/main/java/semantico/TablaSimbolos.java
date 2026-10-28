@@ -1,12 +1,16 @@
 package semantico;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TablaSimbolos {
     public Map<String, Simbolo> tabla;
     public TablaSimbolos padre;
     public String nombreEntorno;
+
+    public List<TablaSimbolos> hijos;
 
     public int offset; // Contador para asignar posiciones relativas en el Stack/Heap
 
@@ -23,6 +27,11 @@ public class TablaSimbolos {
         this.esCiclo = false;
         this.etiquetaBreak = null;
         this.etiquetaContinue = null;
+
+        this.hijos = new ArrayList<>();
+        if (padre != null) {
+            padre.hijos.add(this);
+        }
     }
 
     public boolean insertar(Simbolo simbolo) {
